@@ -1,0 +1,39 @@
+{% extends "core/base.html" %}
+{% block title %}Exam Management{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>Exam Management</h2>
+  {% if role == 'admin' or role == 'faculty' or role == 'staff' %}
+  <a class="btn" href="{% url 'exam-add' %}">+ Add Exam</a>
+  {% endif %}
+</div>
+<div class="panel">
+<table class="table">
+  <thead><tr><th>#</th><th>Name</th><th>Course</th><th>Date</th><th>Duration</th>{% if role == 'student' %}<th>Identity Verification</th>{% endif %}</tr></thead>
+  <tbody>
+    {% for e in exams %}
+    <tr>
+      <td>{{ forloop.counter }}</td><td>{{ e.name }}</td><td>{{ e.course }}</td>
+      <td>{{ e.date|date:"d M Y" }}</td>
+      <td>{{ e.duration_mins }} min</td>
+      {% if role == 'student' %}
+      <td>
+        {% if e.pk in verified_exam_ids %}
+          <span class="badge badge-yes">✅ Verified</span>
+        {% else %}
+          <form method="post" action="{% url 'verify-exam-attendance' e.pk %}">
+            {% csrf_token %}
+            <button class="btn ghost" type="button" data-webauthn-verify="1">👆 Verify Identity</button>
+            <span data-webauthn-status class="muted" style="display:block;font-size:.78rem;margin-top:4px"></span>
+          </form>
+        {% endif %}
+      </td>
+      {% endif %}
+    </tr>
+    {% empty %}
+    <tr><td colspan="6" class="empty-row">No exams scheduled.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends "core/base.html" %}
+{% block title %}Manage Hostel Applications{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>Manage Hostel Applications</h2>
+  <div style="display:flex;gap:8px">
+    <form method="post" action="{% url 'hostel-recommend' %}" style="display:inline">{% csrf_token %}<button class="btn" type="submit">Suggest rooms for pending</button></form>
+    <a class="btn ghost" href="{% url 'hostel-list' %}">Hostels</a>
+    <a class="btn ghost" href="{% url 'hostel-rooms' %}">Manage Rooms</a>
+  </div>
+</div>
+<div class="panel">
+<table class="table">
+  <thead><tr><th>Student</th><th>CNIC</th><th>Hostel</th><th>Preference</th><th>Suggested Room</th><th>Assigned Room</th><th>Documents</th><th>Status</th><th>Applied</th><th></th></tr></thead>
+  <tbody>
+    {% for a in applications %}
+    <tr>
+      <td>{{ a.student }}</td>
+      <td>{{ a.student.cnic_display|default:"—" }}</td>
+      <td>{{ a.hostel|default:"—" }}</td>
+      <td>{{ a.get_room_type_preference_display }}</td>
+      <td>{{ a.recommended_room|default:"—" }}</td>
+      <td>{{ a.assigned_room|default:"—" }}</td>
+      <td>
+        {% if a.cnic_copy %}<a href="{{ a.cnic_copy.url }}" target="_blank">CNIC</a>{% else %}<span class="muted">No CNIC</span>{% endif %}
+        {% if a.guardian_consent_letter %} · <a href="{{ a.guardian_consent_letter.url }}" target="_blank">Consent</a>{% endif %}
+        {% if a.medical_certificate %} · <a href="{{ a.medical_certificate.url }}" target="_blank">Medical</a>{% endif %}
+      </td>
+      <td><span class="badge badge-{{ a.status }}">{{ a.get_status_display }}</span></td>
+      <td>{{ a.applied_at|date:"M d, Y" }}</td>
+      <td><a class="btn ghost" href="{% url 'hostel-review' a.pk %}">Review</a></td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="10" class="empty-row">No applications yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

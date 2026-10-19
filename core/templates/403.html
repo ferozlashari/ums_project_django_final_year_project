@@ -1,0 +1,10 @@
+{% extends "core/base.html" %}
+{% block title %}Access Denied - {{ site_name }}{% endblock %}
+{% block content %}
+<section class="panel" style="max-width:520px;margin:40px auto;text-align:center">
+  <div style="font-size:3rem">🔒</div>
+  <h2>Access Denied</h2>
+  <p class="muted">You don't have permission to view this page. If you think this is a mistake, contact an administrator.</p>
+  <a class="btn" href="{% url 'dashboard' %}">Back to Dashboard</a>
+</section>
+{% endblock %}

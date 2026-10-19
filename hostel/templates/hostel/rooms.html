@@ -1,0 +1,30 @@
+{% extends "core/base.html" %}
+{% block title %}Hostel Rooms{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>Hostel Rooms</h2>
+  <div style="display:flex;gap:8px">
+    <a class="btn ghost" href="{% url 'hostel-list' %}">Hostels</a>
+    <a class="btn" href="{% url 'hostel-room-add' %}">+ Add Room</a>
+  </div>
+</div>
+<div class="panel">
+<table class="table">
+  <thead><tr><th>Hostel</th><th>Block</th><th>Room #</th><th>Type</th><th>Occupied</th><th>Capacity</th></tr></thead>
+  <tbody>
+    {% for r in rooms %}
+    <tr>
+      <td>{{ r.hostel|default:"—" }}</td>
+      <td>{{ r.block }}</td>
+      <td>{{ r.number }}</td>
+      <td>{{ r.get_room_type_display }}</td>
+      <td>{{ r.occupied_count }}</td>
+      <td><span class="badge {% if r.is_full %}badge-unavailable{% else %}badge-available{% endif %}">{{ r.capacity }}</span></td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="6" class="empty-row">No rooms added yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

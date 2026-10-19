@@ -1,0 +1,28 @@
+{% extends "core/base.html" %}
+{% block title %}Transport Routes{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>Transport Routes</h2>
+  <div style="display:flex;gap:8px">
+    <a class="btn ghost" href="{% url 'transport-vehicle-list' %}">Vehicles</a>
+    <a class="btn ghost" href="{% url 'transport-assignment-list' %}">Assignments</a>
+    <a class="btn ghost" href="{% url 'transport-stop-add' %}">+ Add Stop</a>
+    <a class="btn" href="{% url 'transport-route-add' %}">+ New Route</a>
+  </div>
+</div>
+<div class="cards-grid">
+  {% for r in routes %}
+  <div class="panel">
+    <h3 style="margin-top:0">{{ r.name }}</h3>
+    <p class="muted">{{ r.vehicle|default:"No vehicle assigned" }} &middot; Fare: {{ currency_symbol }} {{ r.fare_per_semester }}</p>
+    <p class="muted">{{ r.seats_taken }}{% if r.seats_available != None %} / {{ r.vehicle.capacity }}{% endif %} seats taken</p>
+    <strong>Stops:</strong>
+    <ul>
+      {% for s in r.stops.all %}<li>{{ s.name }} - {{ s.pickup_time|time:"h:i A" }}</li>{% empty %}<li class="muted">No stops added yet</li>{% endfor %}
+    </ul>
+  </div>
+  {% empty %}
+  <p class="empty-row">No routes yet.</p>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends "core/base.html" %}
+{% block title %}Program Preferences{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>🎓 Program Preferences</h2>
+  <a class="btn ghost" href="{% url 'applications-list' %}">← Applications</a>
+</div>
+<p class="muted">Application for <strong>{{ application.display_name }}</strong> — status:
+  <span class="badge">{{ application.get_status_display }}</span>
+  {% if merit_score is not None %} · Merit score <strong>{{ merit_score|floatformat:2 }}</strong>{% endif %}
+</p>
+
+{% if preferences %}
+<div class="panel" style="margin-bottom:18px">
+  <h3>Your choices</h3>
+  <table class="table">
+    <thead><tr><th>#</th><th>Program</th><th>Merit rank</th><th>Result</th></tr></thead>
+    <tbody>
+    {% for p in preferences %}
+      <tr>
+        <td>{{ p.rank }}</td>
+        <td>{{ p.program.name }} <span class="muted">({{ p.program.code }})</span></td>
+        <td>{% if p.merit_rank_in_program %}#{{ p.merit_rank_in_program }}{% else %}—{% endif %}</td>
+        <td>
+          {% if p.status == 'selected' %}<span class="badge badge-success">Selected ✓</span>
+          {% elif p.status == 'waiting_list' %}<span class="badge badge-warning">Waiting list</span>
+          {% elif p.status == 'not_allocated' %}<span class="badge">Not allocated</span>
+          {% else %}<span class="badge">Awaiting allocation</span>{% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <p class="muted" style="margin-top:8px">Seats are given in merit order. If a program you ranked higher takes you, your lower choices are not needed.</p>
+</div>
+{% endif %}
+
+{% if editable %}
+<div class="panel">
+  <h3>{% if preferences %}Change your choices{% else %}Choose your programs{% endif %}</h3>
+  <p class="muted">Pick up to 5 programs in order of preference. Each program can be chosen once, and choices must be filled in order.</p>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {% for field in form %}
+    <div style="margin-bottom:10px">
+      <label for="{{ field.id_for_label }}"><strong>{{ field.label }}</strong></label><br>
+      {{ field }}
+      {{ field.errors }}
+    </div>
+    {% endfor %}
+    <button class="btn" type="submit">Save preferences</button>
+  </form>
+</div>
+{% else %}
+<p class="muted">Preferences are locked because this application has already been decided.</p>
+{% endif %}
+{% endblock %}

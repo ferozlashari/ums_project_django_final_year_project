@@ -1,0 +1,29 @@
+{% extends "core/base.html" %}
+{% block title %}{{ cfg.title }}{% endblock %}
+{% block content %}
+<section class="panel" style="max-width:980px">
+  <h2>{% if instance and not plain %}Edit {% elif not plain %}Add {% endif %}{{ cfg.title }}</h2>
+  {% if cfg.help %}<p class="muted">{{ cfg.help }}</p>{% endif %}
+  <form method="post">{% csrf_token %}
+    {{ form.as_p }}
+    {% if formset %}
+      <h3 style="margin-top:18px">{{ inline_label }}</h3>
+      {{ formset.management_form }}
+      {% if formset.non_form_errors %}<div class="errorlist">{{ formset.non_form_errors }}</div>{% endif %}
+      <div style="overflow-x:auto"><table class="table">
+        <thead><tr>{% for f in formset.forms.0.visible_fields %}<th>{{ f.label }}</th>{% endfor %}</tr></thead>
+        <tbody>
+        {% for fs in formset %}
+          <tr>{% for hidden in fs.hidden_fields %}{{ hidden }}{% endfor %}
+            {% for f in fs.visible_fields %}<td>{{ f }}{% if f.errors %}<div class="errorlist">{{ f.errors }}</div>{% endif %}</td>{% endfor %}</tr>
+        {% endfor %}
+        </tbody></table></div>
+      <p class="muted" style="font-size:.8rem">Blank rows are ignored. Save again to get more blank rows.</p>
+    {% endif %}
+    <div class="form-actions">
+      <button class="btn" type="submit">Save</button>
+      <a class="btn ghost" href="{% if back %}{% url back %}{% else %}{% url 'setup-list' key %}{% endif %}">Cancel</a>
+    </div>
+  </form>
+</section>
+{% endblock %}

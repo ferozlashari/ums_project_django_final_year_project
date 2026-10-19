@@ -1,0 +1,13 @@
+{% extends "core/base.html" %}
+{% block title %}Roles{% endblock %}
+{% block content %}
+<div class="page-head"><h2>Roles &amp; permissions</h2><a class="btn" href="{% url 'role-add' %}">➕ New role</a></div>
+<div class="panel"><table class="table"><thead><tr><th>Role</th><th>Permissions</th><th>Status</th><th></th></tr></thead><tbody>
+{% for r in roles %}<tr>
+<td><strong>{{ r.name }}</strong>{% if r.is_system %} <span class="muted">(default)</span>{% endif %}<br><span class="muted">{{ r.description }}</span></td>
+<td>{{ r.permissions.all|length }} granted</td><td>{% if r.is_active %}Active{% else %}Inactive{% endif %}</td>
+<td><a class="btn ghost" href="{% url 'role-edit' r.pk %}">Edit</a>
+{% if not r.is_system %}<form method="post" action="{% url 'role-delete' r.pk %}" style="display:inline" onsubmit="return confirm('Delete this role?')">{% csrf_token %}<button class="btn ghost">Delete</button></form>{% endif %}</td>
+</tr>{% empty %}<tr><td colspan="4" class="muted">No roles yet.</td></tr>{% endfor %}
+</tbody></table></div>
+{% endblock %}

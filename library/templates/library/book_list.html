@@ -1,0 +1,89 @@
+{% extends "core/base.html" %}
+{% block title %}Library{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>📚 Library Catalog</h2>
+  <div style="display:flex;gap:8px">
+    {% if role != 'student' %}<a class="btn ghost" href="{% url 'all-loans' %}">Loans</a>{% else %}<a class="btn ghost" href="{% url 'my-loans' %}">My Loans</a>{% endif %}
+    {% if role != 'student' %}<a class="btn" href="{% url 'book-add' %}">+ Add Book</a>{% endif %}
+  </div>
+</div>
+<p class="muted" style="margin-top:-6px">Any file type can be attached to a book (PDF, Word, PowerPoint, Excel, EPUB, images, etc). PDFs/images/text open directly in a new tab; Word/PowerPoint/Excel files download instead, since browsers don't have a built-in viewer for those formats.</p>
+
+<div class="panel">
+  <form method="get" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+    <input type="text" name="q" value="{{ query }}" placeholder="Search title, author, category…" style="flex:1;min-width:220px;padding:9px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text)">
+    <button class="btn" type="submit">Search Catalog</button>
+    <button class="btn ghost" type="submit" name="worldwide" value="1">🌐 Also Search Worldwide</button>
+  </form>
+
+  <table class="table">
+    <thead><tr><th>Title</th><th>Author</th><th>Category</th><th>Available</th><th>Digital Copy</th><th></th></tr></thead>
+    <tbody>
+      {% for b in books %}
+      <tr>
+        <td>{{ b.title }}</td>
+        <td>{{ b.author|default:"—" }}</td>
+        <td>{{ b.category|default:"—" }}</td>
+        <td><span class="badge {% if b.is_available %}badge-available{% else %}badge-unavailable{% endif %}">{{ b.available_copies }}/{{ b.total_copies }}</span></td>
+        <td>
+          {% if b.ebook_file %}
+            {% if b.ebook_viewable_inline %}
+              <a class="btn ghost" href="{{ b.ebook_file.url }}" target="_blank" rel="noopener">👁️ View ({{ b.ebook_extension|upper }})</a>
+            {% else %}
+              <a class="btn ghost" href="{{ b.ebook_file.url }}" download title="Your browser can't preview {{ b.ebook_extension|upper }} files inline - it downloads instead">⬇️ Download ({{ b.ebook_extension|upper }})</a>
+            {% endif %}
+          {% else %}
+            <span class="muted" style="font-size:.8rem">Physical copy only</span>
+          {% endif %}
+        </td>
+        <td style="display:flex;gap:6px">
+          {% if role == 'student' %}
+            {% if b.is_available %}<form method="post" action="{% url 'borrow-book' b.pk %}" style="display:inline">{% csrf_token %}<button class="btn ghost" type="submit">Borrow</button></form>{% endif %}
+          {% else %}
+            <a class="btn ghost" href="{% url 'book-edit' b.pk %}">Edit</a>
+            <form method="post" action="{% url 'book-delete' b.pk %}" style="display:inline" onsubmit="return confirm('Remove this book?')">{% csrf_token %}<button class="btn ghost" type="submit">Delete</button></form>
+          {% endif %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6" class="empty-row">No books in the catalog yet{% if query %} matching "{{ query }}"{% endif %}.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if show_online %}
+<div class="panel" style="margin-top:16px">
+  <h3 style="margin-top:0">🌐 Worldwide results for "{{ query }}" <span class="muted" style="font-weight:400;font-size:.8rem">via Open Library</span></h3>
+  {% if online_error %}
+    <p class="msg error">⚠️ {{ online_error }}</p>
+  {% elif online_results %}
+  <table class="table">
+    <thead><tr><th>Title</th><th>Author</th><th>Year</th><th>Read Online</th>{% if role != 'student' %}<th></th>{% endif %}</tr></thead>
+    <tbody>
+      {% for r in online_results %}
+      <tr>
+        <td>{{ r.title }}</td>
+        <td>{{ r.author|default:"—" }}</td>
+        <td>{{ r.year|default:"—" }}</td>
+        <td>
+          {% if r.read_online_url %}
+            <a class="btn ghost" href="{{ r.read_online_url }}" target="_blank" rel="noopener">📖 Read Full Text</a>
+          {% else %}
+            <span class="muted" style="font-size:.78rem">Not available to read online</span>
+          {% endif %}
+        </td>
+        {% if role != 'student' %}
+        <td><a class="btn ghost" href="{% url 'book-add' %}?title={{ r.title|urlencode }}&author={{ r.author|urlencode }}&isbn={{ r.isbn|urlencode }}&cover_url={{ r.cover_url|urlencode }}&year={{ r.year|default:'' }}">Import to Catalog</a></td>
+        {% endif %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+    <p class="muted">No worldwide results found for "{{ query }}".</p>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends "core/base.html" %}
+{% block title %}Timetable{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>Timetable</h2>
+  <div style="display:flex;gap:8px"><a class="btn ghost" href="{% url 'timetable-planner' %}">Planner</a><a class="btn" href="{% url 'timetable-add' %}">+ Add Entry</a></div>
+</div>
+<div class="panel">
+<table class="table">
+  <thead><tr><th>#</th><th>Section</th><th>Room</th><th>Day/Time</th><th>Status</th></tr></thead>
+  <tbody>
+    {% for t in timetable %}
+    <tr><td>{{ forloop.counter }}</td><td>{{ t.section }}</td><td>{{ t.room }}</td><td>{{ t.timeslot }}</td><td>{{ t.get_status_display }}</td></tr>
+    {% empty %}
+    <tr><td colspan="5" class="empty-row">No timetable entries yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

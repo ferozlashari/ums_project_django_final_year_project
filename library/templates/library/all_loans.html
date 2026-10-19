@@ -1,0 +1,25 @@
+{% extends "core/base.html" %}
+{% block title %}All Library Loans{% endblock %}
+{% block content %}
+<div class="page-head"><h2>All Library Loans</h2><a class="btn ghost" href="{% url 'book-list' %}">Catalog</a></div>
+<div class="panel">
+<table class="table">
+  <thead><tr><th>Book</th><th>Student</th><th>Borrowed</th><th>Due</th><th>Status</th><th>Fine</th><th></th></tr></thead>
+  <tbody>
+    {% for l in loans %}
+    <tr>
+      <td>{{ l.book.title }}</td>
+      <td>{{ l.student }}</td>
+      <td>{{ l.borrowed_at|date:"M d, Y" }}</td>
+      <td>{{ l.due_date }}</td>
+      <td><span class="badge {% if l.status == 'returned' %}badge-resolved{% elif l.is_overdue %}badge-overdue{% else %}badge-pending{% endif %}">{% if l.is_overdue and l.status == 'borrowed' %}Overdue{% else %}{{ l.get_status_display }}{% endif %}</span></td>
+      <td>{% if l.fine_amount %}Rs. {{ l.fine_amount }}{% else %}—{% endif %}</td>
+      <td>{% if l.status == 'borrowed' %}<form method="post" action="{% url 'return-book' l.pk %}" style="display:inline">{% csrf_token %}<button class="btn ghost" type="submit">Mark Returned</button></form>{% endif %}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="7" class="empty-row">No loans yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

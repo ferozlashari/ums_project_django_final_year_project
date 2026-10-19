@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Django / local runtime
+.env
+.secret_key
+db.sqlite3
+db.sqlite3-journal
+media/*
+!media/.gitkeep
+logs/*
+!logs/.gitkeep
+staticfiles/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Uploaded/generated archives
+*.zip
+*.tar.gz

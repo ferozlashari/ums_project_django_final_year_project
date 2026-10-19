@@ -1,0 +1,24 @@
+{% extends "core/base.html" %}
+{% block title %}Students by Program{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>Students by Program</h2>
+  <a class="btn ghost" href="{% url 'reports' %}">&larr; Back to Reports</a>
+</div>
+<div class="panel">
+<table class="table">
+  <thead><tr><th>#</th><th>Program</th><th>Students</th></tr></thead>
+  <tbody>
+    {% for row in rows %}
+    <tr>
+      <td>{{ forloop.counter }}</td>
+      <td>{{ row.program__name|default:"Unassigned" }}</td>
+      <td>{{ row.total }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="3" class="empty-row">No student data yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

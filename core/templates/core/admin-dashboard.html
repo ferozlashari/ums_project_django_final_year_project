@@ -1,0 +1,104 @@
+{% extends "core/base.html" %}
+{% block title %}University Command Center{% endblock %}
+{% block content %}
+<h2>🏛️ University Command Center</h2>
+<p class="muted">Institution-wide snapshot for the current semester — every figure below is read live from the database.</p>
+
+<div class="stat-grid">
+  <div class="stat-card"><span class="stat-label">Students</span><span class="stat-value">{{ stats.student_count }}</span></div>
+  <div class="stat-card"><span class="stat-label">Faculty &amp; Staff</span><span class="stat-value">{{ stats.teacher_count }}</span></div>
+  <div class="stat-card"><span class="stat-label">Programs</span><span class="stat-value">{{ stats.program_count }}</span></div>
+  <div class="stat-card"><span class="stat-label">Courses</span><span class="stat-value">{{ stats.course_count }}</span></div>
+  <div class="stat-card"><span class="stat-label">Course Sections</span><span class="stat-value">{{ stats.section_count }}</span></div>
+  <div class="stat-card"><span class="stat-label">Active Registrations</span><span class="stat-value">{{ stats.registration_count }}</span></div>
+  <div class="stat-card"><span class="stat-label">Today's Attendance</span><span class="stat-value">{% if stats.todays_attendance_percent is not None %}{{ stats.todays_attendance_percent }}%{% else %}Not scheduled{% endif %}</span></div>
+  <div class="stat-card{% if stats.pending_admissions %} stat-card-warn{% endif %}"><span class="stat-label">Pending Admissions</span><span class="stat-value">{{ stats.pending_admissions }}</span></div>
+  <div class="stat-card"><span class="stat-label">Fee Collected</span><span class="stat-value">{{ currency_symbol }} {{ fee_collected }}</span></div>
+  <div class="stat-card{% if stats.pending_invoices %} stat-card-warn{% endif %}"><span class="stat-label">Outstanding Fees</span><span class="stat-value">{{ stats.pending_invoices }}</span></div>
+  <div class="stat-card{% if stats.open_complaints %} stat-card-warn{% endif %}"><span class="stat-label">Open Complaints</span><span class="stat-value">{{ stats.open_complaints }}</span></div>
+  <div class="stat-card{% if needs_attention.exceptions %} stat-card-warn{% endif %}"><span class="stat-label">Exceptions</span><span class="stat-value">{{ needs_attention.exceptions }}</span></div>
+</div>
+
+<div class="dash-grid2" style="margin-top:18px">
+  <div>
+    <div class="dash-card-block">
+      <h3>Recent Admission Applications <a href="{% url 'applications-list' %}">View all</a></h3>
+      <table class="table">
+        <thead><tr><th>Applicant</th><th>Program</th><th>Status</th></tr></thead>
+        <tbody>
+          {% for a in recent_applications %}
+          <tr><td>{{ a.display_name }}</td><td>{{ a.program.name }}</td><td><span class="badge badge-{{ a.status }}">{{ a.get_status_display }}</span></td></tr>
+          {% empty %}
+          <tr><td colspan="3" class="empty-row">No applications yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="dash-card-block">
+      <h3>Manage Everything</h3>
+      <div class="grid">
+        <a class="dash-card" href="{% url 'student-list' %}"><span class="dash-icon">🎓</span>Students</a>
+        <a class="dash-card" href="{% url 'teacher-list' %}"><span class="dash-icon">🧑‍🏫</span>Teachers</a>
+        <a class="dash-card" href="{% url 'course-list' %}"><span class="dash-icon">📚</span>Courses</a>
+        <a class="dash-card" href="{% url 'applications-list' %}"><span class="dash-icon">🏫</span>Admissions</a>
+        <a class="dash-card" href="{% url 'attendance-list' %}"><span class="dash-icon">🗓️</span>Attendance</a>
+        <a class="dash-card" href="{% url 'exams' %}"><span class="dash-icon">📝</span>Exams</a>
+        <a class="dash-card" href="{% url 'class-list' %}"><span class="dash-icon">🎥</span>Online Classes</a>
+        <a class="dash-card" href="{% url 'fees-list' %}"><span class="dash-icon">💳</span>Fees &amp; Challans</a>
+        <a class="dash-card" href="{% url 'pending-payments' %}"><span class="dash-icon">🧾</span>Confirm Payments</a>
+        <a class="dash-card" href="{% url 'book-list' %}"><span class="dash-icon">📖</span>Library</a>
+        <a class="dash-card" href="{% url 'hostel-manage' %}"><span class="dash-icon">🏠</span>Hostel</a>
+        <a class="dash-card" href="{% url 'hostel-list' %}"><span class="dash-icon">🏢</span>Hostel Buildings</a>
+        <a class="dash-card" href="{% url 'merit-list' %}"><span class="dash-icon">🏆</span>Merit List</a>
+        <a class="dash-card" href="{% url 'manage-complaints' %}"><span class="dash-icon">🗣️</span>Complaints</a>
+        <a class="dash-card" href="{% url 'manage-scholarships' %}"><span class="dash-icon">🎓</span>Scholarships</a>
+        <a class="dash-card" href="{% url 'timetable-list' %}"><span class="dash-icon">⏰</span>Timetable</a>
+        <a class="dash-card" href="{% url 'transport-route-list' %}"><span class="dash-icon">🚌</span>Transport</a>
+        <a class="dash-card" href="{% url 'payroll-list' %}"><span class="dash-icon">💰</span>Payroll</a>
+        <a class="dash-card" href="{% url 'notices-list' %}"><span class="dash-icon">📢</span>Notices</a>
+        <a class="dash-card" href="{% url 'reports' %}"><span class="dash-icon">📊</span>Reports</a>
+        <a class="dash-card" href="{% url 'analytics' %}"><span class="dash-icon">📈</span>Analytics</a>
+        <a class="dash-card" href="{% url 'retention-dashboard' %}"><span class="dash-icon">🚨</span>Early-Warning</a>
+        <a class="dash-card" href="{% url 'exception-center' %}"><span class="dash-icon">🚨</span>Exception Center</a>
+        <a class="dash-card" href="{% url 'data-quality-center' %}"><span class="dash-icon">🧹</span>Data Quality Center</a>
+        <a class="dash-card" href="{% url 'biometric-command-center' %}"><span class="dash-icon">🔐</span>Biometric Command Center</a>
+        <a class="dash-card" href="/admin/"><span class="dash-icon">⚙️</span>UMS Admin</a>
+        <a class="dash-card" href="{% url 'site-settings' %}"><span class="dash-icon">🛠️</span>Site Settings</a>
+        <a class="dash-card" href="{% url 'ai-chat' %}"><span class="dash-icon">🤖</span>AI Assistant</a>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="dash-card-block">
+      <h3>Needs Attention</h3>
+      <div class="dash-list-item">
+        <span>Open exceptions</span>
+        {% if needs_attention.exceptions %}<a class="badge badge-pending" href="{% url 'exception-center' %}">{{ needs_attention.exceptions }} - Review</a>{% else %}<span class="badge badge-yes">Clear</span>{% endif %}
+      </div>
+      <div class="dash-list-item">
+        <span>Data quality issues</span>
+        {% if needs_attention.data_quality %}<a class="badge badge-pending" href="{% url 'data-quality-center' %}">{{ needs_attention.data_quality }} - Review</a>{% else %}<span class="badge badge-yes">Clear</span>{% endif %}
+      </div>
+    </div>
+
+    <div class="dash-card-block">
+      <h3>Pending Approvals</h3>
+      {% for item in pending_approvals %}
+      <div class="dash-list-item">
+        <span>{{ item.label }} ({{ item.count }})</span>
+        {% if item.count %}<a class="badge badge-pending" href="{% url item.url %}">Action</a>{% else %}<span class="badge badge-yes">Clear</span>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="dash-card-block">
+      <h3>System Health</h3>
+      <div class="dash-list-item"><span>Database</span><span class="badge badge-yes">Connected</span></div>
+      <div class="dash-list-item"><span>AI Assistant</span><span class="badge {% if ai_configured %}badge-yes{% else %}badge-pending{% endif %}">{% if ai_configured %}Configured{% else %}Not configured{% endif %}</span></div>
+      <div class="dash-list-item"><span>Payment Details</span><span class="badge badge-yes">Set in Site Settings</span></div>
+    </div>
+  </div>
+</div>
+{% endblock %}

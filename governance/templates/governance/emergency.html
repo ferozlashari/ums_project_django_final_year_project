@@ -1,0 +1,16 @@
+{% extends "core/base.html" %}
+{% block title %}Emergency Access{% endblock %}
+{% block content %}
+<div class="page-head"><h2>🚨 Emergency (break-glass) access</h2></div>
+<div class="panel">
+  <p>The System Administrator runs the UMS technology. Institutional decisions - admissions, results, refunds - stay with the responsible university office.</p>
+  <p>Only if <strong>nobody</strong> currently holds an office's authority, you may ask for a short emergency window. A reason is required, it expires automatically (maximum 60 minutes), and every action is audited and shown on the Executive Dashboard.</p>
+  <form method="post">{% csrf_token %}{{ form.as_p }}<button class="btn" type="submit">Request emergency access</button></form>
+</div>
+<div class="panel"><h3 style="margin-top:0">History</h3>
+<table class="table"><thead><tr><th>Who</th><th>Reason</th><th>Granted</th><th>Expires</th><th>Status</th></tr></thead><tbody>
+{% for g in grants %}<tr><td>{{ g.user }}</td><td>{{ g.reason }}</td><td>{{ g.granted_at|date:"d M H:i" }}</td><td>{{ g.expires_at|date:"d M H:i" }}</td>
+<td>{% if g.is_active %}<strong>ACTIVE</strong> <form method="post" style="display:inline">{% csrf_token %}<button class="btn ghost" name="revoke" value="{{ g.pk }}">End now</button></form>{% elif g.revoked_at %}Ended{% else %}Expired{% endif %}</td></tr>
+{% empty %}<tr><td colspan="5" class="muted">No emergency access has ever been requested.</td></tr>{% endfor %}
+</tbody></table></div>
+{% endblock %}

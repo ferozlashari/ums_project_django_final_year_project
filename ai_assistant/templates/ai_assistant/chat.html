@@ -1,0 +1,64 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% block title %}AI Assistant - {{ site_name }}{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <span class="eyebrow">AI Assistant</span>
+    <h1 style="margin-top:6px;font-size:1.5rem;">Ask UMS Assistant</h1>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <select class="ai-lang-select" data-lang-select title="Voice language">
+      <option value="en-US">English</option>
+      <option value="ur-PK">اردو (Urdu)</option>
+      <option value="sd">سنڌي (Sindhi) — text only</option>
+    </select>
+    <button type="button" class="btn ghost" data-speaker-toggle title="Read replies aloud">🔇 Voice reply off</button>
+    <form method="post" action="{% url 'ai-chat-new' %}">
+      {% csrf_token %}
+      <button class="btn" type="submit">+ New chat</button>
+    </form>
+  </div>
+</section>
+
+<div class="ai-layout">
+  <aside class="ai-sidebar panel">
+    <h3 class="section-title" style="margin-top:0">Conversations</h3>
+    <ul class="ai-convo-list">
+      {% for c in conversations %}
+        <li>
+          <a href="{% url 'ai-chat' %}?c={{ c.id }}" class="{% if active and active.id == c.id %}active{% endif %}">
+            {{ c.title|truncatechars:32 }}
+          </a>
+        </li>
+      {% empty %}
+        <li class="empty-row">No conversations yet.</li>
+      {% endfor %}
+    </ul>
+  </aside>
+
+  <div class="ai-chat-panel panel">
+    <div class="ai-messages" id="ai-messages" data-conversation-id="{{ active.id|default:'' }}">
+      {% for m in chat_messages %}
+        <div class="ai-bubble ai-bubble-{{ m.role }}">
+          <span class="ai-role">{{ m.get_role_display }}</span>
+          <div class="ai-text">{{ m.content|linebreaksbr }}</div>
+        </div>
+      {% empty %}
+        <div class="ai-empty">
+          👋 Hi {{ user.first_name|default:user.username }}! Ask me about notices, your attendance,
+          fee status, grades, or (for staff) institution-wide stats.
+        </div>
+      {% endfor %}
+    </div>
+
+    <form id="ai-form" class="ai-input-row" autocomplete="off">
+      <button type="button" class="ai-mic-btn" data-mic-btn title="Ask by voice">🎤</button>
+      <input type="text" id="ai-input" maxlength="2000" placeholder="Type your question…" required />
+      <button class="btn" type="submit">Send</button>
+    </form>
+    <p class="ai-hint">The assistant only answers using your own data and role permissions. Max 15 messages / minute. Voice input/output uses your browser's built-in speech engine — no data leaves your device for that part.</p>
+  </div>
+</div>
+{% endblock %}
+

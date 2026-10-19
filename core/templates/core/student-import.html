@@ -1,0 +1,34 @@
+{% extends "core/base.html" %}
+{% block title %}Import Students{% endblock %}
+{% block content %}
+<section class="panel">
+  <h2>Import Students from CSV</h2>
+  <p class="muted">Upload a UTF-8 CSV with <code>admission_no</code> and <code>full_name</code>. Optional: <code>username</code>, <code>email</code>, <code>cnic</code>, <code>phone</code>, <code>address</code>, <code>gender</code>, <code>program_code</code>, <code>status</code>.
+  The whole file is checked first and <strong>nothing is saved</strong> until every row is valid. New accounts are created inactive with no shared password. Changing an existing student's program is not allowed here.</p>
+  <form method="post" enctype="multipart/form-data">{% csrf_token %}
+    <input type="file" name="csvfile" accept=".csv" required>
+    <div class="form-actions">
+      <button class="btn" type="submit">Check file</button>
+      <a class="btn ghost" href="{% url 'student-list' %}">Cancel</a>
+    </div>
+  </form>
+</section>
+{% if report %}
+<section class="panel">
+  <h3>Check result</h3>
+  {% for e in report.file_errors %}<p class="msg error">{{ e }}</p>{% endfor %}
+  {% if report.rows %}
+    <p>{{ report.rows|length }} row(s): <strong>{{ report.creates }}</strong> to create, <strong>{{ report.updates }}</strong> to update, <strong>{{ report.error_rows|length }}</strong> with errors.</p>
+    {% if report.error_rows %}
+    <table class="table"><thead><tr><th>Line</th><th>Admission no</th><th>Problems</th></tr></thead><tbody>
+      {% for r in report.error_rows %}<tr><td>{{ r.line }}</td><td>{{ r.admission_no|default:"-" }}</td><td>{{ r.errors|join:"; " }}</td></tr>{% endfor %}
+    </tbody></table>
+    <p class="muted">Fix these rows in the file and upload it again. Nothing has been saved.</p>
+    {% elif report.ok %}
+    <form method="post">{% csrf_token %}<input type="hidden" name="confirm" value="1">
+      <button class="btn" type="submit">Confirm and import {{ report.creates|add:report.updates }} row(s)</button></form>
+    {% endif %}
+  {% endif %}
+</section>
+{% endif %}
+{% endblock %}

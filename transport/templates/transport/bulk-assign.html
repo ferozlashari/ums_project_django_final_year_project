@@ -1,0 +1,82 @@
+{% extends "core/base.html" %}
+{% block title %}Assign Multiple Students to Transport{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>Assign Multiple Students to a Route</h2>
+  <a class="btn ghost" href="{% url 'transport-assignment-list' %}">← Assignments</a>
+</div>
+<p class="muted" style="margin-top:-6px">Pick a route and stop once, then assign as many students as you like in a single submission - one admission number per line (or comma-separated). A student already assigned to another route is simply moved to this one.</p>
+
+<div class="panel">
+  <form method="post">
+    {% csrf_token %}
+    <p>
+      <label for="id_route">Route</label>
+      <select name="route" id="id_route" required>
+        <option value="">-- Choose a route --</option>
+        {% for r in routes %}
+        <option value="{{ r.pk }}">{{ r.name }}</option>
+        {% endfor %}
+      </select>
+    </p>
+
+    <p>
+      <label for="id_stop">Stop (optional - TBA if left blank)</label>
+      <select name="stop" id="id_stop">
+        <option value="">-- TBA --</option>
+        {% for r in routes %}
+          {% for s in r.stops.all %}
+          <option value="{{ s.pk }}" data-route="{{ r.pk }}" style="display:none">{{ s.name }} ({{ s.pickup_time|time:"H:i" }})</option>
+          {% endfor %}
+        {% endfor %}
+      </select>
+    </p>
+
+    <p>
+      <label for="id_admission_numbers">Admission numbers</label>
+      <textarea name="admission_numbers" id="id_admission_numbers" rows="8" placeholder="e.g.&#10;2K23-CS-001&#10;2K23-CS-002&#10;2K23-CS-014" required>{{ request.POST.admission_numbers }}</textarea>
+    </p>
+
+    <div class="form-actions">
+      <button type="submit" class="btn">Assign All</button>
+      <a class="btn ghost" href="{% url 'transport-assignment-list' %}">Cancel</a>
+    </div>
+  </form>
+</div>
+
+{% if results %}
+<div class="panel" style="margin-top:16px">
+  <h3 style="margin-top:0">Results - {{ results.route.name }}{% if results.stop %} · {{ results.stop.name }}{% endif %}</h3>
+  {% if results.assigned %}
+  <p><strong>Assigned ({{ results.assigned|length }}):</strong>
+    {% for s in results.assigned %}{{ s.full_name }} ({{ s.admission_no }}){% if not forloop.last %}, {% endif %}{% endfor %}
+  </p>
+  {% endif %}
+  {% if results.skipped %}
+  <p class="muted"><strong>Skipped ({{ results.skipped|length }}):</strong></p>
+  <ul>
+    {% for admission_no, reason in results.skipped %}
+    <li>{{ admission_no }} - {{ reason }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</div>
+{% endif %}
+
+<script>
+(function () {
+  var routeSelect = document.getElementById('id_route');
+  var stopSelect = document.getElementById('id_stop');
+  function filterStops() {
+    var routeId = routeSelect.value;
+    Array.prototype.forEach.call(stopSelect.options, function (opt) {
+      if (!opt.value) { opt.style.display = ''; return; }
+      opt.style.display = (opt.getAttribute('data-route') === routeId) ? '' : 'none';
+    });
+    stopSelect.value = '';
+  }
+  routeSelect.addEventListener('change', filterStops);
+  filterStops();
+})();
+</script>
+{% endblock %}

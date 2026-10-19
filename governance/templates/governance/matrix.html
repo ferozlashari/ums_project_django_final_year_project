@@ -1,0 +1,15 @@
+{% extends "core/base.html" %}
+{% block title %}Permission Matrix{% endblock %}
+{% block content %}
+<div class="page-head"><h2>🧾 Role × Module permission matrix</h2></div>
+<p class="muted">Read-only view of what every office role can do. The System Administrator edits roles under Security &amp; Policy Center.</p>
+<div class="panel" style="overflow-x:auto">
+<table class="table" style="font-size:.78rem"><thead><tr><th>Module</th>{% for r in roles %}<th>{{ r.name }}</th>{% endfor %}</tr></thead><tbody>
+{% for row in table %}<tr><td><strong>{{ row.label }}</strong></td>{% for c in row.cells %}<td>{{ c|default:"—" }}</td>{% endfor %}</tr>{% endfor %}
+</tbody></table></div>
+<div class="panel"><h3 style="margin-top:0">Separation-of-duties rules</h3>
+<ul>{% for label, a, b in rules %}<li>{{ label }}</li>{% endfor %}</ul>
+<h3>Current violations</h3>
+{% for u, labels in violations %}<p>⚠️ <strong>{{ u.username }}</strong>: {{ labels|join:"; " }}</p>{% empty %}<p class="muted">✅ No one currently holds conflicting duties.</p>{% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,121 @@
+{% extends "core/base.html" %}
+{% block title %}Course Selection{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>📚 Course Selection</h2>
+  {% if role == 'student' %}<a class="btn ghost" href="{% url 'my-registrations' %}">My Registered Courses</a>{% endif %}
+</div>
+
+{% if role == 'student' %}
+{% include "academics/_window_banner.html" %}
+<div class="panel" style="display:flex;gap:8px;margin-bottom:16px">
+  <span class="btn" style="pointer-events:none">📘 Regular Registration</span>
+  <a class="btn ghost" href="{% url 'result-checker' %}">🔁 Retake / Improvement (failed or weak-grade courses)</a>
+</div>
+
+<div class="panel" style="display:flex;flex-wrap:wrap;gap:24px;align-items:end;margin-bottom:16px">
+  <div>
+    <div class="muted" style="font-size:.78rem;text-transform:uppercase;letter-spacing:.04em">Viewing semester</div>
+    <form method="get">
+      <input type="hidden" name="program" value="{{ program_filter }}"><input type="hidden" name="department" value="{{ department_filter }}">
+      <select name="semester" onchange="this.form.submit()" style="font-size:1.05rem;font-weight:600;padding:4px 6px">
+        {% for sem in all_semesters %}
+        <option value="{{ sem.pk }}" {% if viewing_semester.pk == sem.pk %}selected{% endif %}>{{ sem.display_name }}{% if sem.pk == current_semester.pk %} (current){% endif %}</option>
+        {% endfor %}
+      </select>
+    </form>
+    {% if viewing_semester.pk != current_semester.pk %}
+      <div class="muted" style="font-size:.78rem;margin-top:4px">You're viewing a different semester than the active one — registration only succeeds if that semester's own window is open.</div>
+    {% endif %}
+  </div>
+  {% if student.program %}
+  <div>
+    <div class="muted" style="font-size:.78rem;text-transform:uppercase;letter-spacing:.04em">Program</div>
+    <div style="font-size:1.15rem;font-weight:600">{{ student.program.name }}</div>
+  </div>
+  {% endif %}
+  {% if credit_limit %}
+  <div style="flex:1;min-width:220px">
+    <div class="muted" style="font-size:.78rem;text-transform:uppercase;letter-spacing:.04em">Credit hours registered (this semester)</div>
+    <div style="font-weight:600">{{ credits_registered }} / {{ credit_limit }} credits</div>
+    <div style="background:var(--border,#e5e7eb);border-radius:6px;height:8px;margin-top:4px;overflow:hidden">
+      <div style="background:{% if credits_registered >= credit_limit %}var(--danger,#dc2626){% else %}var(--primary,#2563eb){% endif %};height:100%;width:{% widthratio credits_registered credit_limit 100 %}%"></div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+
+<p class="muted" style="margin-top:-6px">
+  {% if role == 'student' %}Only sections you are currently eligible to register for are shown below — prerequisites, credit limit, seats and registration dates are already checked.{% else %}Browse available sections.{% endif %}
+</p>
+
+<form method="get" class="panel" style="display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-bottom:16px">
+  <input type="hidden" name="semester" value="{{ viewing_semester.pk }}">
+  <div>
+    <label>Degree / Program</label><br>
+    <select name="program" onchange="this.form.submit()">
+      <option value="">{% if role == 'student' %}My program (default){% else %}All programs{% endif %}</option>
+      {% for p in programs %}
+      <option value="{{ p.pk }}" {% if program_filter == p.pk|stringformat:"s" %}selected{% endif %}>{{ p.name }} — {{ p.department.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div>
+    <label>Or by Department</label><br>
+    <select name="department" onchange="this.form.submit()">
+      <option value="">Any department</option>
+      {% for d in departments %}
+      <option value="{{ d.pk }}" {% if department_filter == d.pk|stringformat:"s" %}selected{% endif %}>{{ d.name }} ({{ d.faculty.name }})</option>
+      {% endfor %}
+    </select>
+  </div>
+  {% if program_filter or department_filter %}<a class="btn ghost" href="{% url 'browse-sections' %}">Reset to my program</a>{% endif %}
+</form>
+
+{% if role == 'student' %}
+<div style="display:grid;gap:12px">
+  {% for s in sections %}
+  <div class="panel" style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">
+    <div>
+      <div style="font-weight:700;font-size:1.05rem">{{ s.course.code }} — {{ s.course.name }} <span class="muted" style="font-weight:400">({{ s.course.credits }} Cr)</span></div>
+      <div class="muted" style="font-size:.85rem;margin-top:2px">Section {{ s.code }} · {{ s.get_section_type_display }} · {{ s.instructor|default:"Instructor TBA" }}</div>
+      <div style="margin-top:6px;display:flex;gap:14px;flex-wrap:wrap;font-size:.82rem">
+        <span>✓ Prerequisites satisfied</span>
+        <span>✓ Seats {{ s.seats_available }}/{{ s.capacity }} open</span>
+        <span>✓ Eligible</span>
+      </div>
+    </div>
+    <div>
+      {% if s.id in my_section_ids %}
+        <span class="badge badge-pending">Registered</span>
+      {% else %}
+        <form method="post" action="{% url 'register-section' s.id %}">{% csrf_token %}<input type="hidden" name="semester_id" value="{{ viewing_semester.pk }}"><button class="btn" type="submit">Register</button></form>
+      {% endif %}
+    </div>
+  </div>
+  {% empty %}
+  <div class="panel empty-row">No sections are currently eligible for you to register for in this semester — this could mean you're already registered for everything available, the registration window is closed, or prerequisites are outstanding. Check "My Registered Courses", try a different semester above, or contact your advisor.</div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="panel">
+<table class="table">
+  <thead><tr><th>Course</th><th>Section</th><th>Type</th><th>Instructor</th><th>Seats</th></tr></thead>
+  <tbody>
+    {% for s in sections %}
+    <tr>
+      <td>{{ s.course.code }} — {{ s.course.name }}</td>
+      <td>{{ s.code }}</td>
+      <td>{{ s.get_section_type_display }}</td>
+      <td>{{ s.instructor|default:"—" }}</td>
+      <td><span class="badge {% if s.seats_available > 0 %}badge-available{% else %}badge-unavailable{% endif %}">{{ s.seats_available }}/{{ s.capacity }} open</span></td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="5" class="empty-row">No course sections available yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endif %}
+{% endblock %}

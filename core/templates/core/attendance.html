@@ -1,0 +1,95 @@
+{% extends "core/base.html" %}
+{% block title %}Attendance{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>✅ Smart Attendance</h2>
+  {% if role != 'student' %}<a class="btn" href="{% url 'bulk-attendance' %}">✅ Take Attendance (Whole Section)</a> <a class="btn ghost" href="{% url 'attendance-add' %}">+ Record One</a>{% endif %}
+</div>
+
+{% if role == 'faculty' or role == 'staff' %}
+{% if my_sections %}
+<form method="get" class="panel" style="display:flex;gap:10px;align-items:end;margin-bottom:16px">
+  <div>
+    <label>My Subject</label><br>
+    <select name="section">
+      <option value="">All my sections</option>
+      {% for s in my_sections %}
+      <option value="{{ s.pk }}" {% if section_filter == s.pk|stringformat:"s" %}selected{% endif %}>{{ s.course.code }} - {{ s.course.name }} ({{ s }})</option>
+      {% endfor %}
+    </select>
+  </div>
+  <button class="btn ghost" type="submit">Filter</button>
+</form>
+{% endif %}
+{% endif %}
+
+{% if role == 'student' %}
+<div class="panel" style="margin-bottom:16px">
+  <h3 style="margin-top:0">Today's Check-In</h3>
+  {% if today_record and today_record.check_in_time %}
+    <p>✅ Checked in at <strong>{{ today_record.check_in_time|date:"H:i" }}</strong>
+    {% if today_record.check_out_time %} · Checked out at <strong>{{ today_record.check_out_time|date:"H:i" }}</strong> · Duration: {{ today_record.duration_display }}{% endif %}
+    </p>
+    {% if not today_record.check_out_time %}
+      <form method="post" action="{% url 'attendance-checkout' %}">{% csrf_token %}
+        <button class="btn ghost" type="submit">Check Out</button>
+      </form>
+    {% endif %}
+  {% else %}
+    <p class="muted">You haven't checked in today. One tap marks you present automatically — no need to wait for a teacher.</p>
+    {% if not require_biometric_attendance %}
+    <form method="post" action="{% url 'attendance-checkin' %}">{% csrf_token %}
+      <button class="btn" type="submit">📍 Check In Now</button>
+    </form>
+    {% endif %}
+    {% if user.profile.biometric_attendance_enabled %}
+    <form method="post" action="{% url 'attendance-biometric-checkin' %}" style="margin-top:8px">{% csrf_token %}
+      <button class="btn {% if not require_biometric_attendance %}ghost{% endif %}" type="button" data-webauthn-verify="1">🔐 Verify Identity &amp; Check In</button>
+      <p data-webauthn-status class="muted" style="margin:6px 0 0;min-height:1.1em;font-size:.85rem"></p>
+    </form>
+    {% elif require_biometric_attendance %}
+    <p class="muted">This campus requires biometric check-in, but you've turned it off in Settings. <a href="{% url 'account-settings' %}">Turn it back on</a> to check in.</p>
+    {% endif %}
+
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+      <p class="muted" style="font-size:.85rem;margin-bottom:8px">Physical campus devices (separate from the passkey on your own phone/laptop):</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        {% for opt in device_options %}
+        <div>
+          {% if opt.configured %}
+          <form method="post" action="{% url 'attendance-device-checkin' opt.type %}">{% csrf_token %}
+            <button class="btn ghost" type="submit">{{ opt.icon }} {{ opt.label }}</button>
+          </form>
+          {% else %}
+          <button class="btn ghost" type="button" disabled title="No {{ opt.label }} device is configured for this campus yet">{{ opt.icon }} {{ opt.label }} — Not Configured</button>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+<div class="panel">
+<table class="table">
+  <thead><tr><th>Date</th><th>Student</th><th>Section</th><th>Status</th><th>Check-In</th><th>Check-Out</th><th>Method</th></tr></thead>
+  <tbody>
+    {% for a in attendance %}
+    <tr>
+      <td>{{ a.date }}</td>
+      <td>{{ a.student }}</td>
+      <td>{{ a.section|default:"—" }}</td>
+      <td><span class="badge {% if a.present %}badge-yes{% else %}badge-no{% endif %}">{{ a.present|yesno:"Present,Absent" }}</span></td>
+      <td>{{ a.check_in_time|date:"H:i"|default:"—" }}</td>
+      <td>{{ a.check_out_time|date:"H:i"|default:"—" }}</td>
+      <td><span class="muted" style="font-size:.78rem">{{ a.get_method_display }}</span></td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="7" class="empty-row">No attendance records yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+<p class="ai-hint" style="margin-top:10px">Smart Attendance offers two ways to mark present: a plain self-check-in button, or passkey-based identity verification (WebAuthn - works on any phone/laptop that supports a passkey, such as fingerprint, Face ID, or Windows Hello, no extra hardware needed; your biometric itself never leaves your device) - in addition to manual teacher marking.</p>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "core/base.html" %}
+{% block title %}Transport Assignments{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>Student Transport Assignments</h2>
+  <div style="display:flex;gap:8px">
+    <a class="btn ghost" href="{% url 'transport-route-list' %}">← Routes</a>
+    <a class="btn ghost" href="{% url 'transport-bulk-assign' %}">+ Assign Multiple</a>
+    <a class="btn" href="{% url 'transport-assign' %}">+ Assign Student</a>
+  </div>
+</div>
+<div class="panel">
+<table class="table">
+  <thead><tr><th>Student</th><th>Route</th><th>Stop</th><th></th></tr></thead>
+  <tbody>
+    {% for a in assignments %}
+    <tr>
+      <td>{{ a.student.full_name }} ({{ a.student.admission_no }})</td>
+      <td>{{ a.route.name }}</td>
+      <td>{{ a.stop.name|default:"—" }}</td>
+      <td><form method="post" action="{% url 'transport-unassign' a.pk %}">{% csrf_token %}<button class="btn ghost" type="submit">Remove</button></form></td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="4" class="empty-row">No assignments yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

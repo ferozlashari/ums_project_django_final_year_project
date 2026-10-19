@@ -1,0 +1,97 @@
+{% extends "core/base.html" %}
+{% block title %}Automation Center{% endblock %}
+{% block content %}
+<div class="page-head"><h2>⚙️ Automation Center</h2></div>
+<p class="muted" style="margin-top:-8px">Runs routine housekeeping - fee-due reminders, overdue detection and low-attendance warnings. Safe to run repeatedly: the same notification is never sent twice within 24 hours.</p>
+
+<div class="panel" style="max-width:520px">
+  <form method="post">{% csrf_token %}
+    <label style="display:flex;gap:8px;align-items:center;margin-bottom:14px">
+      <input type="checkbox" name="dry_run" checked> Dry run (calculate only - don't send notifications)
+    </label>
+    <button class="btn" type="submit">▶️ Run Automation Now</button>
+  </form>
+
+  {% if result %}
+  <div style="margin-top:20px">
+    <h4>Last run result</h4>
+    <table class="table">
+      <tr><td>Fee-due reminders</td><td><strong>{{ result.fee_due }}</strong></td></tr>
+      <tr><td>Overdue invoices detected</td><td><strong>{{ result.overdue }}</strong></td></tr>
+      <tr><td>Low-attendance warnings</td><td><strong>{{ result.low_attendance }}</strong></td></tr>
+      <tr><td>Registration deadline reminders</td><td><strong>{{ result.registration_deadline }}</strong></td></tr>
+    </table>
+  </div>
+  {% endif %}
+</div>
+
+<div class="panel" style="max-width:720px;margin-top:20px">
+  <h4 style="margin-top:0">Status</h4>
+  <table class="table">
+    <tr>
+      <td>Last run (any trigger)</td>
+      <td>
+        {% if last_run %}
+          {{ last_run.created_at|date:"d M Y, H:i" }} -
+          {% if last_run.actor %}by {{ last_run.actor }}{% else %}scheduled{% endif %}
+        {% else %}
+          <span class="muted">Never run yet on this installation.</span>
+        {% endif %}
+      </td>
+    </tr>
+    <tr>
+      <td>Scheduler mode</td>
+      <td>
+        <strong>{{ scheduler_mode }}</strong>
+        <div class="muted" style="font-size:.85rem;margin-top:4px">
+          {% if scheduler_mode == 'celery' %}Jobs below run automatically in the background.
+          {% elif scheduler_mode == 'builtin' %}Jobs below run automatically on the server's built-in schedule.
+          {% elif scheduler_mode == 'external' %}Jobs below run when the server's scheduled trigger fires{% if not cron_enabled %} - <strong>but that trigger is not enabled yet, so nothing runs automatically</strong>{% endif %}.
+          {% else %}Nothing is scheduled. Use the button above to run the jobs manually.{% endif %}
+          A job only appears as "ran" below if it actually ran.
+        </div>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<div class="panel" style="max-width:900px;margin-top:20px">
+  <h4 style="margin-top:0">Scheduled Jobs</h4>
+  <table class="table">
+    <thead><tr><th>Job</th><th>Every</th><th>Last run</th><th>Result</th><th>Via</th><th>Runs / failures</th></tr></thead>
+    <tbody>
+      {% for j in jobs %}
+      <tr>
+        <td><strong>{{ j.name }}</strong><div class="muted" style="font-size:.8rem">{{ j.description }}</div></td>
+        <td>{{ j.interval }}</td>
+        <td>{% if j.last_started %}{{ j.last_started|date:"d M Y, H:i" }}{% else %}<span class="muted">never</span>{% endif %}</td>
+        <td>{{ j.last_status }}{% if j.last_error %}<div class="muted" style="font-size:.8rem">{{ j.last_error|truncatechars:120 }}</div>{% endif %}</td>
+        <td>{{ j.last_trigger|default:"-" }}</td>
+        <td>{{ j.run_count }} / {{ j.failure_count }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if recent_runs %}
+<div class="panel" style="max-width:720px;margin-top:20px">
+  <h4 style="margin-top:0">Recent Runs</h4>
+  <table class="table">
+    <thead><tr><th>When</th><th>Triggered By</th><th>Type</th><th>Results</th></tr></thead>
+    <tbody>
+      {% for run in recent_runs %}
+      <tr>
+        <td>{{ run.created_at|date:"d M Y, H:i" }}</td>
+        <td>{% if run.actor %}{{ run.actor }}{% else %}<span class="muted">Scheduled</span>{% endif %}</td>
+        <td>{{ run.object_repr }}</td>
+        <td class="muted">{% for field, change in run.changes.items %}{{ field }}={{ change.1 }} {% endfor %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+<p class="muted" style="margin-top:16px;font-size:.85rem">Every run is recorded in the <a href="{% url 'audit-log' %}">Audit Log</a>.</p>
+{% endblock %}

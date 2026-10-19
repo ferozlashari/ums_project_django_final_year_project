@@ -1,0 +1,44 @@
+{% extends "core/base.html" %}
+{% block title %}Guardian Dashboard{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>👪 Guardian Dashboard</h2>
+  <a class="btn ghost" href="{% url 'guardian-request-link' %}">+ Link Another Student</a>
+</div>
+
+{% if pending_links %}
+<div class="panel" style="border-left:4px solid #d97706;margin-bottom:16px">
+  <strong>Pending verification:</strong>
+  {% for link in pending_links %}
+    {{ link.student.full_name }} ({{ link.student.admission_no }}) - waiting for admin approval.<br>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% for c in children_data %}
+<div class="panel" style="margin-bottom:16px">
+  <h3 style="margin-top:0">{{ c.student.full_name }} <span class="muted">({{ c.student.admission_no }} &middot; {{ c.student.program|default:"—" }})</span></h3>
+  <div class="cards-grid">
+    <div class="panel" style="background:var(--bg)">
+      <p class="muted" style="margin:0">Attendance</p>
+      <p style="font-size:1.6rem;font-weight:700;margin:4px 0">{% if c.attendance_pct != None %}{{ c.attendance_pct }}%{% else %}No records yet{% endif %}</p>
+    </div>
+    <div class="panel" style="background:var(--bg)">
+      <p class="muted" style="margin:0">Unpaid Fees</p>
+      <p style="font-size:1.6rem;font-weight:700;margin:4px 0">{{ currency_symbol }} {{ c.unpaid_total }}</p>
+      <p class="muted" style="margin:0">{{ c.unpaid_invoices.count }} challan(s) pending</p>
+    </div>
+    <div class="panel" style="background:var(--bg)">
+      <p class="muted" style="margin:0">Recent Grades</p>
+      {% for g in c.recent_grades %}
+        <p style="margin:2px 0">{{ g.exam }}: <strong>{{ g.marks }}</strong> ({{ g.percentage }}%)</p>
+      {% empty %}
+        <p class="muted" style="margin:2px 0">No grades posted yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% empty %}
+<p class="empty-row">No verified student links yet. Use "Link Another Student" above and wait for admin approval.</p>
+{% endfor %}
+{% endblock %}

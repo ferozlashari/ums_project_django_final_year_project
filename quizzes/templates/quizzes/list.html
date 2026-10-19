@@ -1,0 +1,39 @@
+{% extends "core/base.html" %}
+{% block title %}Quizzes{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>🧩 Online Quizzes</h2>
+  {% if role == 'admin' or role == 'faculty' or role == 'staff' %}
+  <a class="btn" href="{% url 'quiz-add' %}">+ New Quiz</a>
+  {% endif %}
+</div>
+<div class="cards-grid">
+  {% for row in rows %}
+  {% with quiz=row.quiz attempt=row.attempt %}
+  <div class="panel">
+    <h3 style="margin-top:0">{{ quiz.title }}</h3>
+    <p class="muted">{{ quiz.section.course.code }} - {{ quiz.section.course.name }}</p>
+    <p class="muted" style="font-size:.85rem">{{ quiz.total_marks }} question(s) &middot; {{ quiz.time_limit_minutes }} min{% if role != 'student' %} &middot; {% if quiz.is_published %}Published{% else %}Draft{% endif %}{% endif %}</p>
+
+    {% if role == 'student' %}
+      {% if attempt and attempt.submitted_at %}
+        <span class="badge badge-yes">Completed: {{ attempt.score }} / {{ quiz.total_marks }}</span>
+        <a class="btn ghost" href="{% url 'quiz-result' quiz.pk %}">Review</a>
+      {% else %}
+        <a class="btn" href="{% url 'quiz-take' quiz.pk %}">Take Quiz</a>
+      {% endif %}
+    {% elif role == 'admin' or role == 'faculty' or role == 'staff' %}
+      <div style="display:flex;gap:6px">
+        <a class="btn ghost" href="{% url 'quiz-questions' quiz.pk %}">Questions ({{ quiz.total_marks }})</a>
+        <form method="post" action="{% url 'quiz-publish' quiz.pk %}">{% csrf_token %}
+          <button class="btn ghost" type="submit">{% if quiz.is_published %}Unpublish{% else %}Publish{% endif %}</button>
+        </form>
+      </div>
+    {% endif %}
+  </div>
+  {% endwith %}
+  {% empty %}
+  <p class="empty-row">No quizzes yet.</p>
+  {% endfor %}
+</div>
+{% endblock %}

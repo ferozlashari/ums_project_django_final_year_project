@@ -1,0 +1,56 @@
+{% extends "core/base.html" %}
+{% block title %}Online Classes{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>🎥 Online Classes</h2>
+  {% if role != 'student' %}<a class="btn" href="{% url 'class-schedule' %}">+ Schedule Class</a>{% endif %}
+</div>
+<p class="muted" style="margin-top:-6px">Live audio, video, and screen sharing — powered by free Jitsi Meet video calls.</p>
+
+<div class="panel">
+  <h3 style="margin-top:0">Upcoming &amp; Live</h3>
+  <table class="table">
+    <thead><tr><th>Title</th><th>Course</th><th>Host</th><th>Scheduled</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      {% for c in upcoming %}
+      <tr>
+        <td>{{ c.title }}</td>
+        <td>{{ c.section.course.code }}</td>
+        <td>{{ c.host }}</td>
+        <td>{{ c.scheduled_at|date:"M d, Y H:i" }}</td>
+        <td><span class="badge {% if c.display_status == 'live' %}badge-open{% else %}badge-pending{% endif %}">{{ c.display_status_label }}</span></td>
+        <td>
+          {% if c.is_joinable %}
+            <a class="btn ghost" href="{% url 'class-join' c.pk %}">Join</a>
+          {% else %}
+            <span class="muted" style="font-size:.8rem">Opens 10 min early</span>
+          {% endif %}
+          {% if role != 'student' and c.status != 'ended' %}
+            <form action="{% url 'class-end' c.pk %}" method="post" style="display:inline" onsubmit="return confirm('Mark this class as ended?')">
+              {% csrf_token %}
+              <button type="submit" class="btn ghost">End</button>
+            </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6" class="empty-row">{% if empty_hint %}{{ empty_hint }}{% else %}No upcoming classes scheduled.{% endif %}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if past %}
+<div class="panel" style="margin-top:16px">
+  <h3 style="margin-top:0">Past Classes</h3>
+  <table class="table">
+    <thead><tr><th>Title</th><th>Course</th><th>Host</th><th>Was Scheduled</th></tr></thead>
+    <tbody>
+      {% for c in past %}
+      <tr><td>{{ c.title }}</td><td>{{ c.section.course.code }}</td><td>{{ c.host }}</td><td>{{ c.scheduled_at|date:"M d, Y H:i" }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+{% endblock %}

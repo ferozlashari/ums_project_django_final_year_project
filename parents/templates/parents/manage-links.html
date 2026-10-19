@@ -1,0 +1,47 @@
+{% extends "core/base.html" %}
+{% block title %}Guardian Link Requests{% endblock %}
+{% block content %}
+<div class="page-head"><h2>Guardian / Parent Link Requests</h2></div>
+
+<div class="panel" style="margin-bottom:16px">
+  <h3 style="margin-top:0">Pending Verification</h3>
+  <table class="table">
+    <thead><tr><th>Guardian</th><th>Student</th><th>Relation</th><th>Requested</th><th></th></tr></thead>
+    <tbody>
+      {% for link in pending %}
+      <tr>
+        <td>{{ link.guardian.get_full_name|default:link.guardian.username }} ({{ link.guardian.email }})</td>
+        <td>{{ link.student.full_name }} ({{ link.student.admission_no }})</td>
+        <td>{{ link.get_relation_display }}</td>
+        <td>{{ link.requested_at|date:"M d, Y" }}</td>
+        <td style="display:flex;gap:6px">
+          <form method="post" action="{% url 'verify-guardian-link' link.pk %}">{% csrf_token %}<button class="btn ghost" type="submit">Verify</button></form>
+          <form method="post" action="{% url 'reject-guardian-link' link.pk %}">{% csrf_token %}<button class="btn ghost" type="submit">Reject</button></form>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="5" class="empty-row">No pending requests.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="panel">
+  <h3 style="margin-top:0">Verified Links</h3>
+  <table class="table">
+    <thead><tr><th>Guardian</th><th>Student</th><th>Relation</th><th>Verified</th></tr></thead>
+    <tbody>
+      {% for link in verified %}
+      <tr>
+        <td>{{ link.guardian.get_full_name|default:link.guardian.username }}</td>
+        <td>{{ link.student.full_name }} ({{ link.student.admission_no }})</td>
+        <td>{{ link.get_relation_display }}</td>
+        <td>{{ link.verified_at|date:"M d, Y" }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="4" class="empty-row">No verified links yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

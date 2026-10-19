@@ -1,0 +1,14 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% block title %}Verify It's You{% endblock %}
+{% block content %}
+<div class="auth-card" style="text-align:center">
+  <div style="font-size:2.5rem">🔒</div>
+  <h2>Verify it's you</h2>
+  <p class="muted">Use your fingerprint, face, or security key to finish signing in.</p>
+  <button class="btn" id="webauthn-verify-btn" type="button" style="margin-top:10px">🔐 Verify with Passkey</button>
+  <p id="webauthn-status" style="margin-top:14px;min-height:1.2em"></p>
+  <a class="btn ghost" href="{% url 'login' %}" style="margin-top:10px">Cancel</a>
+</div>
+<script src="{% static 'js/webauthn.js' %}" defer></script>
+{% endblock %}

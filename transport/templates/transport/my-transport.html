@@ -1,0 +1,24 @@
+{% extends "core/base.html" %}
+{% block title %}My Transport{% endblock %}
+{% block content %}
+<div class="page-head"><h2>🚌 My Transport</h2></div>
+
+{% if assignment %}
+<div class="panel" style="max-width:520px">
+  <h3 style="margin-top:0">{{ assignment.route.name }}</h3>
+  {% if assignment.stop %}
+  <p><strong>Pickup point:</strong> {{ assignment.stop.name }}</p>
+  <p><strong>Pickup time:</strong> {{ assignment.stop.pickup_time|time:"h:i A" }}</p>
+  {% else %}
+  <p class="muted">No specific stop assigned yet - contact the transport office.</p>
+  {% endif %}
+  {% if assignment.route.vehicle %}
+  <p><strong>Vehicle:</strong> {{ assignment.route.vehicle.registration_no }}</p>
+  {% if assignment.route.vehicle.driver_name %}<p><strong>Driver:</strong> {{ assignment.route.vehicle.driver_name }}{% if assignment.route.vehicle.driver_phone %} ({{ assignment.route.vehicle.driver_phone }}){% endif %}</p>{% endif %}
+  {% endif %}
+  <p><strong>Semester fare:</strong> {{ currency_symbol }} {{ assignment.route.fare_per_semester }}</p>
+</div>
+{% else %}
+<p class="empty-row">You're not assigned to a transport route yet. Contact the admin office to sign up.</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends "core/base.html" %}
+{% block title %}Teacher Automation{% endblock %}
+{% block content %}
+<div class="page-head"><h2>⚙️ Teacher Automation</h2></div>
+<p class="muted" style="margin-top:-8px">Do a whole day's teaching admin in a few clicks. Only your own sections are ever touched, nothing is invented (attendance and marks always come from you), and every run is recorded.</p>
+
+{% if not semester %}<div class="panel" style="border-left:4px solid #d97706">No active semester is configured for today, so attendance cannot be taken. Ask an administrator to set the current semester.</div>{% endif %}
+
+<div class="stat-grid">
+  <div class="stat-card"><span class="stat-value">{{ todays_count }}</span><span class="stat-label">Classes today</span></div>
+  <div class="stat-card {% if unmarked %}stat-card-warn{% endif %}"><span class="stat-value">{{ unmarked|length }}</span><span class="stat-label">Not yet marked</span></div>
+</div>
+
+<div class="panel" style="margin-top:16px">
+  <h3 style="margin-top:0">🗓️ Attendance — all today's classes</h3>
+  <p class="muted">Classes come from the approved timetable for {{ today|date:"l, d M Y" }}.</p>
+  <a class="btn" href="{% url 'teacher-attendance-today' %}">Open today's attendance sheet</a>
+  <a class="btn ghost" href="{% url 'teacher-attendance-today' %}?all=1">Show all my sections</a>
+  <a class="btn ghost" href="{% url 'teacher-attendance-summary' %}">📊 Attendance totals — all classes</a>
+  {% if unmarked %}
+  <form method="post" action="{% url 'teacher-attendance-today' %}" style="display:inline" onsubmit="return confirm('Mark EVERY registered student present in the {{ unmarked|length }} class(es) with no attendance yet today?')">
+    {% csrf_token %}<input type="hidden" name="action" value="present_all_unmarked">
+    <button class="btn ghost" type="submit">✅ Present-all for {{ unmarked|length }} unmarked class(es)</button>
+  </form>
+  {% endif %}
+</div>
+
+<div class="panel" style="margin-top:16px">
+  <h3 style="margin-top:0">📝 Marks — all my sections</h3>
+  <p><a class="btn" href="{% url 'teacher-marks-all' %}">Enter marks for all classes on one page</a></p>
+  <table class="table">
+    <thead><tr><th>Section</th><th>Students</th><th>Complete</th><th>Submitted</th><th></th></tr></thead>
+    <tbody>
+    {% for m in marks %}
+      <tr>
+        <td>{{ m.section.course.code }} — {{ m.section.course.name }} (Sec {{ m.section.code|default:"—" }})</td>
+        {% if m.scheme %}
+        <td>{{ m.students }}</td><td>{{ m.complete }} / {{ m.students }}</td><td>{{ m.submitted }} / {{ m.students }}</td>
+        <td><a class="btn ghost" href="{% url 'teacher-marks' m.section.pk %}">Open marks sheet</a></td>
+        {% else %}
+        <td colspan="3" class="muted">No assessment scheme defined by administration yet</td><td></td>
+        {% endif %}
+      </tr>
+    {% empty %}<tr><td colspan="5" class="muted">You have no assigned sections.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="panel" style="margin-top:16px;max-width:620px">
+  <h3 style="margin-top:0">🔔 Run my updates</h3>
+  <p class="muted">Warns students in your sections who are below the minimum attendance, and reminds those who have not submitted an assignment due within 48 hours. Safe to repeat — nobody is notified twice within 24 hours.</p>
+  <form method="post">{% csrf_token %}
+    <label style="display:flex;gap:8px;align-items:center;margin-bottom:12px"><input type="checkbox" name="dry_run" checked> Dry run (count only, send nothing)</label>
+    <button class="btn" type="submit">▶️ Run now</button>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "core/base.html" %}
+{% block title %}Transport Recommendations{% endblock %}
+{% block content %}
+<div class="page-head"><h2>Transport Recommendations</h2>
+  <a class="btn ghost" href="{% url 'transport-assignment-list' %}">← Assignments</a></div>
+<p class="muted">Suggested from each student's address and the route stops, with seat capacity checked. Nothing is assigned until you approve a row.</p>
+<div class="panel"><table class="table">
+<thead><tr><th>Student</th><th>Suggested route</th><th>Stop</th><th>Fare / semester</th><th></th></tr></thead><tbody>
+{% for r in rows %}<tr><td>{{ r.student.full_name }}</td>
+<td>{{ r.route|default:"—" }}</td><td>{{ r.stop|default:"—" }}</td>
+<td>{% if r.route %}{{ r.route.fare_per_semester }}{% else %}—{% endif %}</td>
+<td>{% if r.route %}<form method="post">{% csrf_token %}<input type="hidden" name="student" value="{{ r.student.pk }}"><button class="btn" type="submit">Approve</button></form>{% else %}<span class="muted">{{ r.reason }}</span>{% endif %}</td></tr>
+{% empty %}<tr><td colspan="5" class="empty-row">Every active student already has a route.</td></tr>{% endfor %}
+</tbody></table></div>
+{% endblock %}

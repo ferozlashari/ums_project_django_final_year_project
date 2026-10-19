@@ -1,0 +1,42 @@
+{% extends "core/base.html" %}
+{% block title %}My Registered Courses{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>📚 My Registered Courses</h2>
+  <a class="btn ghost" href="{% url 'browse-sections' %}">Browse More Sections</a>
+</div>
+{% for w in windows %}
+<div class="panel" style="margin-bottom:12px;border-left:4px solid {% if w.drop_open %}var(--success){% else %}var(--danger){% endif %}">
+  <strong>{{ w.semester.display_name }}</strong> —
+  {% if w.drop_open %}<span class="badge badge-success">Drop open</span> until {{ w.drop_deadline|date:"d M Y, H:i" }}.
+  {% else %}<span class="badge badge-danger">Drop closed</span> — the deadline was {{ w.drop_deadline|date:"d M Y, H:i" }}. Registered courses can no longer be dropped.{% endif %}
+</div>
+{% endfor %}
+<div class="panel">
+<table class="table">
+  <thead><tr><th>Course</th><th>Section</th><th>Instructor</th><th>Registered</th><th></th></tr></thead>
+  <tbody>
+    {% for r in registrations %}
+    <tr>
+      <td>{{ r.section.course.code }} — {{ r.section.course.name }}</td>
+      <td>{{ r.section.code }}</td>
+      <td>{{ r.section.instructor|default:"—" }}</td>
+      <td>{{ r.registered_at|date:"M d, Y" }}</td>
+      <td>
+        {% if r.can_drop %}
+        <form method="post" action="{% url 'drop-registration' r.pk %}" onsubmit="return confirm('Drop this course?')">
+          {% csrf_token %}
+          <button class="btn ghost" type="submit">Drop</button>
+        </form>
+        {% else %}
+        <button class="btn ghost" type="button" disabled title="The drop deadline for this semester has passed">Drop closed</button>
+        {% endif %}
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="5" class="empty-row">Not registered for any courses yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

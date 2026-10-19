@@ -1,0 +1,21 @@
+{% extends "core/base.html" %}
+{% block title %}Timetable Planner{% endblock %}
+{% block content %}
+<div class="page-head"><h2>Timetable Planner — {{ semester.display_name }}</h2>
+  <a class="btn ghost" href="{% url 'timetable-list' %}">← Timetable</a></div>
+<div class="panel">
+  <p class="muted">Generate creates <strong>draft</strong> entries for registered sections that have no slot. Drafts only become official when you approve them, and approval is blocked while conflicts exist.</p>
+  <form method="post" style="display:flex;gap:8px">{% csrf_token %}
+    <button class="btn" name="action" value="generate">Generate draft timetable</button>
+    <button class="btn ghost" name="action" value="approve">Approve all drafts</button>
+  </form>
+</div>
+<div class="panel"><h3>Conflicts ({{ conflicts|length }})</h3>
+  <ul>{% for c in conflicts %}<li>{{ c.message }}</li>{% empty %}<li class="muted">No conflicts found.</li>{% endfor %}</ul></div>
+{% if result and result.unplaced %}<div class="panel"><h3>Could not place</h3>
+  <ul>{% for u in result.unplaced %}<li>{{ u.section }} — {{ u.reason }}</li>{% endfor %}</ul></div>{% endif %}
+<div class="panel"><h3>Draft entries ({{ drafts|length }})</h3>
+<table class="table"><thead><tr><th>Section</th><th>Room</th><th>Day/Time</th></tr></thead><tbody>
+{% for t in drafts %}<tr><td>{{ t.section }}</td><td>{{ t.room }}</td><td>{{ t.timeslot }}</td></tr>{% empty %}<tr><td colspan="3" class="empty-row">No drafts.</td></tr>{% endfor %}
+</tbody></table></div>
+{% endblock %}

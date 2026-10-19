@@ -1,0 +1,102 @@
+{% extends "core/base.html" %}
+{% block title %}Student Management{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>Student Management</h2>
+  {% if role == 'admin' %}
+  <div class="actions" style="margin:0;">
+    <a class="btn" href="{% url 'student-add' %}">+ Add Student</a>
+    <a class="btn ghost" href="{% url 'student-import' %}">Import CSV</a>
+    <a class="btn ghost" href="{% url 'student-export' %}">Export CSV</a>
+  </div>
+  {% endif %}
+</div>
+
+<form method="get" class="search-bar">
+  <input type="text" name="q" placeholder="Search by name or admission no..." value="{{ query }}">
+  <button class="btn ghost" type="submit">Search</button>
+</form>
+
+{% if role != 'student' %}
+<form method="get" class="panel" style="display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-bottom:16px">
+  <input type="hidden" name="q" value="{{ query }}">
+  <div>
+    <label>Faculty</label><br>
+    <select name="faculty" onchange="this.form.submit()">
+      <option value="">All faculties</option>
+      {% for f in faculties %}<option value="{{ f.pk }}" {% if filters.faculty == f.pk|stringformat:"s" %}selected{% endif %}>{{ f.name }}</option>{% endfor %}
+    </select>
+  </div>
+  <div>
+    <label>Department</label><br>
+    <select name="department" onchange="this.form.submit()">
+      <option value="">All departments</option>
+      {% for d in departments %}<option value="{{ d.pk }}" {% if filters.department == d.pk|stringformat:"s" %}selected{% endif %}>{{ d.name }}</option>{% endfor %}
+    </select>
+  </div>
+  <div>
+    <label>Degree / Program</label><br>
+    <select name="program" onchange="this.form.submit()">
+      <option value="">All programs</option>
+      {% for p in programs %}<option value="{{ p.pk }}" {% if filters.program == p.pk|stringformat:"s" %}selected{% endif %}>{{ p.name }}</option>{% endfor %}
+    </select>
+  </div>
+  <div>
+    <label>Province</label><br>
+    <select name="province" onchange="this.form.submit()">
+      <option value="">All provinces</option>
+      {% for code, label in provinces %}<option value="{{ code }}" {% if filters.province == code %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+  </div>
+  <div>
+    <label>District</label><br>
+    <input type="text" name="district" value="{{ filters.district }}" placeholder="e.g. Karachi" style="padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text)">
+  </div>
+  <div>
+    <label>Student Type</label><br>
+    <select name="student_type" onchange="this.form.submit()">
+      <option value="">All types</option>
+      {% for code, label in student_statuses %}<option value="{{ code }}" {% if filters.student_type == code %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+  </div>
+  <div>
+    <label>Fee Status</label><br>
+    <select name="fee_status" onchange="this.form.submit()">
+      <option value="">Paid &amp; Unpaid</option>
+      <option value="paid" {% if filters.fee_status == 'paid' %}selected{% endif %}>Paid only</option>
+      <option value="unpaid" {% if filters.fee_status == 'unpaid' %}selected{% endif %}>Unpaid only</option>
+    </select>
+  </div>
+  <div><button class="btn" type="submit">Apply</button> <a class="btn ghost" href="{% url 'student-list' %}">Reset</a></div>
+</form>
+{% endif %}
+
+<div class="panel">
+<table class="table">
+  <thead><tr><th>#</th><th>Name</th><th>Adm No</th><th>Program</th>{% if role != 'student' %}<th>District</th><th>Province</th>{% endif %}<th>Status</th>{% if role == 'admin' %}<th>Actions</th>{% endif %}</tr></thead>
+  <tbody>
+    {% for s in students %}
+    <tr>
+      <td>{{ forloop.counter }}</td>
+      <td>{{ s.full_name }}</td>
+      <td>{{ s.admission_no }}</td>
+      <td>{{ s.program|default:"—" }}</td>
+      {% if role != 'student' %}
+      <td>{{ s.district|default:"—" }}</td>
+      <td>{{ s.get_province_display|default:"—" }}</td>
+      {% endif %}
+      <td><span class="badge badge-{{ s.status }}">{{ s.get_status_display }}</span></td>
+      {% if role == 'admin' %}
+      <td class="row-actions">
+        <a href="{% url 'student-edit' s.id %}">Edit</a>
+        <form method="post" action="{% url 'student-delete' s.id %}" style="display:inline" onsubmit="return confirm('Delete this student?')">{% csrf_token %}<button class="danger-link" type="submit">Delete</button></form>
+      </td>
+      {% endif %}
+    </tr>
+    {% empty %}
+    <tr><td colspan="8" class="empty-row">No students found{% if role == 'faculty' or role == 'staff' %} in your assigned sections{% endif %}.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

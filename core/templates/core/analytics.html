@@ -1,0 +1,52 @@
+{% extends "core/base.html" %}
+{% block title %}Analytics{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h2>Analytics</h2>
+    <p class="muted">Operational indicators from the UMS database.</p>
+  </div>
+  <a class="btn ghost" href="{% url 'reports' %}">&larr; Back to Reports</a>
+</div>
+
+<div class="chart-grid">
+  <section class="panel chart-card">
+    <h3>Students by Program</h3>
+    {% if programs %}
+      {% for program in programs %}
+      <div class="metric-row">
+        <div class="metric-label"><span>{{ program.label }}</span><strong>{{ program.total }}</strong></div>
+        <div class="metric-track"><span style="width: {{ program.percent }}%"></span></div>
+      </div>
+      {% endfor %}
+      <p class="muted small">Values are shown directly from the current student records.</p>
+    {% else %}
+      <div class="empty-state">No student program data is available yet.</div>
+    {% endif %}
+  </section>
+
+  <section class="panel chart-card">
+    <h3>Fee Position</h3>
+    <div class="stat-pair">
+      <div class="stat-box"><span>Paid</span><strong>{{ fees_paid_display }}</strong></div>
+      <div class="stat-box"><span>Outstanding</span><strong>{{ fees_outstanding_display }}</strong></div>
+    </div>
+    <div class="stacked-bar" aria-label="Paid and outstanding fee amounts">
+      <span class="stack-paid" style="width: {{ fees_paid_percent }}%"></span>
+      <span class="stack-outstanding" style="width: {{ fees_outstanding_percent }}%"></span>
+    </div>
+  </section>
+
+  <section class="panel chart-card">
+    <h3>Attendance Position</h3>
+    <div class="stat-pair">
+      <div class="stat-box"><span>Present</span><strong>{{ attendance_present }}</strong></div>
+      <div class="stat-box"><span>Absent</span><strong>{{ attendance_absent }}</strong></div>
+    </div>
+    <div class="stacked-bar" aria-label="Present and absent attendance records">
+      <span class="stack-present" style="width: {{ attendance_present_percent }}%"></span>
+      <span class="stack-absent" style="width: {{ attendance_absent_percent }}%"></span>
+    </div>
+  </section>
+</div>
+{% endblock %}

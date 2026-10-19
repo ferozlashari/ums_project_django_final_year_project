@@ -1,0 +1,11 @@
+{% extends "core/base.html" %}
+{% block title %}Reports{% endblock %}
+{% block content %}
+<h2>Reports</h2>
+<div class="grid">
+  <a class="dash-card" href="{% url 'report-student-count' %}"><span class="dash-icon">🎓</span>Student count by program</a>
+  <a class="dash-card" href="{% url 'report-attendance' %}"><span class="dash-icon">🗓️</span>Attendance summary</a>
+  <a class="dash-card" href="{% url 'report-fees' %}"><span class="dash-icon">💳</span>Fees summary</a>
+  <a class="dash-card" href="{% url 'analytics' %}"><span class="dash-icon">📈</span>Visual analytics</a>
+</div>
+{% endblock %}

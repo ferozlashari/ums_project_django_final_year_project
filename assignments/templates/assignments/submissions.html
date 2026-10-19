@@ -1,0 +1,24 @@
+{% extends "core/base.html" %}
+{% block title %}Submissions — {{ assignment.title }}{% endblock %}
+{% block content %}
+<div class="page-head"><h2>Submissions — {{ assignment.title }}</h2><a class="btn ghost" href="{% url 'assignment-list' %}">← Back</a></div>
+<div class="panel">
+<table class="table">
+  <thead><tr><th>Student</th><th>Submitted</th><th>Answer</th><th>File</th><th>Score</th><th></th></tr></thead>
+  <tbody>
+    {% for s in submissions %}
+    <tr>
+      <td>{{ s.student.full_name }} ({{ s.student.admission_no }})</td>
+      <td>{{ s.submitted_at|date:"M d, H:i" }}{% if s.was_late %} <span class="badge badge-unavailable">Late</span>{% endif %}</td>
+      <td>{{ s.text_answer|truncatewords:15|default:"—" }}</td>
+      <td>{% if s.file %}<a href="{{ s.file.url }}" target="_blank">Download</a>{% else %}—{% endif %}</td>
+      <td>{% if s.marks_obtained != None %}{{ s.marks_obtained }} / {{ assignment.max_marks }}{% else %}Not graded{% endif %}</td>
+      <td><a class="btn ghost" href="{% url 'grade-submission' s.pk %}">Grade</a></td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="6" class="empty-row">No submissions yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

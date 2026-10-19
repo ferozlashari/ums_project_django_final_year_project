@@ -1,0 +1,22 @@
+{% extends "core/base.html" %}
+{% block title %}Entry Test Admit Card{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>🎫 Entry Test Admit Card</h2>
+  <button class="btn ghost" onclick="window.print()">🖨️ Print</button>
+</div>
+<div class="panel" style="max-width:560px">
+  <h3 style="margin-top:0">{{ site_full_name }}</h3>
+  <table class="table">
+    <tr><th>Roll Number</th><td><strong>{{ entry_test.roll_number }}</strong></td></tr>
+    <tr><th>Candidate</th><td>{{ application.display_name }}</td></tr>
+    <tr><th>CNIC</th><td>{{ application.cnic|default:"—" }}</td></tr>
+    <tr><th>Program Applied For</th><td>{{ application.program.name }}</td></tr>
+    <tr><th>Test Date</th><td>{{ entry_test.test_date|date:"l, F d, Y" }}</td></tr>
+    <tr><th>Test Time</th><td>{{ entry_test.test_time|time:"h:i A"|default:"To be announced" }}</td></tr>
+    <tr><th>Venue</th><td>{{ entry_test.venue }}</td></tr>
+    <tr><th>Pass Mark</th><td>Above 49 / 100</td></tr>
+  </table>
+  <p class="muted" style="margin-top:14px">Bring this slip and a valid CNIC/ID to the test venue. Results and next steps will appear under Notifications and this Admissions page after evaluation.</p>
+</div>
+{% endblock %}

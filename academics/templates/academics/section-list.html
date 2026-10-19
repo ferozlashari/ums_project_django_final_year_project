@@ -1,0 +1,33 @@
+{% extends "core/base.html" %}
+{% block title %}Course Sections{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>🧩 Course Sections</h2>
+  <a class="btn" href="{% url 'section-add' %}">+ Add Section</a>
+</div>
+<p class="muted" style="margin-top:-8px">
+  Every section that exists, for management purposes. Students register for sections in the
+  active semester from <a href="{% url 'browse-sections' %}">Course Registration</a> instead.
+</p>
+<div class="panel">
+<table class="table">
+  <thead><tr><th>Course</th><th>Section</th><th>Type</th><th>Teacher</th><th>Capacity</th><th>Registered</th><th>Available</th><th></th></tr></thead>
+  <tbody>
+    {% for s in sections %}
+    <tr>
+      <td>{{ s.course.code }} — {{ s.course.name }}</td>
+      <td>{{ s.code }}</td>
+      <td>{{ s.get_section_type_display }}</td>
+      <td>{% if s.instructor %}{{ s.instructor }}{% else %}<span class="badge badge-pending">Unassigned</span>{% endif %}</td>
+      <td>{{ s.capacity }}</td>
+      <td>{{ s.seats_taken }}</td>
+      <td>{{ s.seats_available }}</td>
+      <td><a class="btn ghost" href="{% url 'section-edit' s.pk %}">Edit</a></td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="8" class="empty-row">No sections yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

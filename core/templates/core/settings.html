@@ -1,0 +1,43 @@
+{% extends "core/base.html" %}
+{% block title %}Site Settings{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>⚙️ Site Settings</h2>
+</div>
+
+<div class="panel" style="max-width:640px;margin-bottom:16px">
+  <h3 style="margin-top:0">System Health</h3>
+  <table class="table">
+    <tr>
+      <td>Encrypted fields (CNIC)</td>
+      <td>
+        {% if encryption_health.healthy %}
+          <span class="badge badge-available">✓ Operational</span> - {{ encryption_health.total }} record(s) checked, all decrypt correctly.
+        {% else %}
+          <span class="badge badge-unavailable">⚠ Attention required</span> -
+          {{ encryption_health.failed }} of {{ encryption_health.total }} record(s) cannot be decrypted with the
+          current encryption key. See the note below.
+        {% endif %}
+      </td>
+    </tr>
+  </table>
+  {% if not encryption_health.healthy %}
+  <p class="muted" style="font-size:.85rem">
+    This usually means the system encryption key changed after those records were saved. Please contact
+    the system administrator to restore the original key. The raw encrypted value is never shown to users.
+  </p>
+  {% endif %}
+</div>
+
+<div class="panel" style="max-width:640px">
+  <p class="muted" style="margin-top:0">Changes here apply site-wide immediately - no code or server restart needed.</p>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <div class="form-actions">
+      <button class="btn" type="submit">Save Settings</button>
+      <a class="btn ghost" href="{% url 'dashboard' %}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

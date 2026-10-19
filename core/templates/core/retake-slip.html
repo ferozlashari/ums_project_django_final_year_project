@@ -1,0 +1,20 @@
+{% extends "core/base.html" %}
+{% block title %}Retake/Improvement Slip{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>🎫 Exam Admit Slip</h2>
+  <button class="btn ghost" onclick="window.print()">🖨️ Print</button>
+</div>
+<div class="panel" style="max-width:560px">
+  <h3 style="margin-top:0">{{ site_full_name }}</h3>
+  <table class="table">
+    <tr><th>Type</th><td>{{ application.get_application_type_display }}</td></tr>
+    <tr><th>Student</th><td>{{ application.student.full_name }} ({{ application.student.admission_no }})</td></tr>
+    <tr><th>Course</th><td>{{ application.grade_entry.exam.course.code }} - {{ application.grade_entry.exam.course.name }}</td></tr>
+    <tr><th>Original Result</th><td>{{ application.grade_entry.marks }} ({{ application.grade_entry.letter_grade }})</td></tr>
+    <tr><th>Application Status</th><td><span class="badge badge-yes">Approved</span></td></tr>
+    <tr><th>Applied</th><td>{{ application.applied_at|date:"M d, Y" }}</td></tr>
+  </table>
+  <p class="muted" style="margin-top:14px">Bring this slip and a valid CNIC/ID to the exam venue on the date announced by the department.</p>
+</div>
+{% endblock %}

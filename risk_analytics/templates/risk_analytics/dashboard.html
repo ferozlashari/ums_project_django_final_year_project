@@ -1,0 +1,39 @@
+{% extends "core/base.html" %}
+{% block title %}Early-Warning Dashboard{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>🚨 Retention &amp; Early-Warning Dashboard</h2>
+  <form method="post" action="{% url 'recalculate-risk-flags' %}">
+    {% csrf_token %}
+    <button class="btn" type="submit">Recalculate Now</button>
+  </form>
+</div>
+<p class="muted">Flags combine attendance %, average assessment score (already a rollup of attendance/assignment/midterm/final components), failed-course count, and outstanding fees into one explainable risk level. Flags are refreshed automatically, or use the button above to refresh them now.</p>
+
+<div class="panel">
+<table class="table">
+  <thead><tr><th>Student</th><th>Risk</th><th>Attendance</th><th>Avg Score</th><th>Failed Courses</th><th>Fees</th><th>Reasons</th><th>Flagged</th><th></th></tr></thead>
+  <tbody>
+    {% for f in flags %}
+    <tr>
+      <td>{{ f.student.full_name }} ({{ f.student.admission_no }})</td>
+      <td><span class="badge badge-{{ f.level }}">{{ f.get_level_display }}</span></td>
+      <td>{% if f.attendance_pct != None %}{{ f.attendance_pct }}%{% else %}—{% endif %}</td>
+      <td>{% if f.average_percentage != None %}{{ f.average_percentage }}%{% else %}—{% endif %}</td>
+      <td>{{ f.failed_courses_count }}</td>
+      <td>{% if f.has_outstanding_fees %}<span class="badge badge-unavailable">Unpaid</span>{% else %}<span class="badge badge-available">Clear</span>{% endif %}</td>
+      <td style="white-space:pre-line">{{ f.reasons }}</td>
+      <td>{{ f.first_flagged_at|date:"M d, Y" }}</td>
+      <td>
+        <form method="post" action="{% url 'resolve-risk-flag' f.pk %}">
+          {% csrf_token %}<button class="btn ghost" type="submit">Mark Reviewed</button>
+        </form>
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="9" class="empty-row">No students currently flagged. 🎉</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "core/base.html" %}
+{% block title %}Staff Dashboard{% endblock %}
+{% block content %}
+<div class="page-head"><h2>Staff Dashboard</h2></div>
+<p class="muted" style="margin-top:-8px">Your pending-work queue across the modules you help run day to day.</p>
+
+<div class="stat-grid">
+  <a class="stat-card" href="{% url 'pending-payments' %}"><span class="stat-value">{{ stats.pending_payments }}</span><span class="stat-label">Payments to Verify</span></a>
+  <a class="stat-card {% if stats.overdue_invoices %}stat-card-warn{% endif %}" href="{% url 'fees-list' %}"><span class="stat-value">{{ stats.overdue_invoices }}</span><span class="stat-label">Overdue Invoices</span></a>
+  <a class="stat-card" href="{% url 'manage-complaints' %}"><span class="stat-value">{{ stats.open_complaints }}</span><span class="stat-label">Open Complaints</span></a>
+  <a class="stat-card" href="{% url 'hostel-manage' %}"><span class="stat-value">{{ stats.pending_hostel }}</span><span class="stat-label">Hostel Applications</span></a>
+  <a class="stat-card" href="{% url 'applications-list' %}"><span class="stat-value">{{ stats.pending_admissions }}</span><span class="stat-label">Admission Applications</span></a>
+  <a class="stat-card" href="{% url 'manage-retake-applications' %}"><span class="stat-value">{{ stats.pending_retake_applications }}</span><span class="stat-label">Retake/Improvement Applications</span></a>
+</div>
+{% endblock %}

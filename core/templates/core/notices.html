@@ -1,0 +1,21 @@
+{% extends "core/base.html" %}
+{% block title %}Notices{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>Notices</h2>
+  {% if current_role == 'admin' or current_role == 'faculty' or current_role == 'staff' %}
+  <a class="btn" href="{% url 'notice-add' %}">+ New Notice</a>
+  {% endif %}
+</div>
+<div class="notices">
+  {% for n in notices %}
+  <article class="notice">
+    <h3>{{ n.title }}</h3>
+    <p class="meta">Posted {{ n.published_at|date:"M d, Y H:i" }}{% if n.posted_by %} by {{ n.posted_by }}{% endif %}</p>
+    <div>{{ n.body|linebreaks }}</div>
+  </article>
+  {% empty %}
+  <p class="empty-row">No notices yet.</p>
+  {% endfor %}
+</div>
+{% endblock %}

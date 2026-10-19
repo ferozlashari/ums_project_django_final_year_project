@@ -1,0 +1,45 @@
+{% extends "core/base.html" %}
+{% block title %}Student ID Card{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>Student ID Card</h2>
+  <div style="display:flex;gap:8px">
+    <a href="javascript:history.back()" class="btn ghost">← Back</a>
+    <button class="btn ghost" onclick="window.print()">🖨️ Print</button>
+  </div>
+</div>
+
+<div class="id-card">
+  <div class="id-card-head">
+    <div style="font-weight:800;letter-spacing:.05em">{{ site_name }}</div>
+    <div style="font-size:.8rem;opacity:.9">Student Identity Card</div>
+  </div>
+  <div class="id-card-body">
+    {% if student.user.profile.photo %}
+      <img class="id-card-photo" src="{{ student.user.profile.photo.url }}" alt="Photo">
+    {% else %}
+      <div class="id-card-photo" style="display:flex;align-items:center;justify-content:center;font-size:2rem">👤</div>
+    {% endif %}
+    <h3 style="margin:6px 0 2px">{{ student.full_name }}</h3>
+    <p class="muted" style="margin:0 0 12px">{{ student.program|default:"—" }}</p>
+    <table class="table" style="text-align:left">
+      <tr><th>Admission / Roll No.</th><td>{{ student.admission_no }}</td></tr>
+      <tr><th>CNIC</th><td>{{ student.cnic_display|default:"—" }}</td></tr>
+      <tr><th>Status</th><td><span class="badge badge-{{ student.status }}">{{ student.get_status_display }}</span></td></tr>
+      <tr><th>Program</th><td>{{ student.program.code|default:"—" }}</td></tr>
+    </table>
+    <p class="muted" style="font-size:.75rem;margin-top:12px">Valid for current academic session. Property of {{ site_name }} if found, please return to campus office.</p>
+    <div style="margin-top:14px;text-align:center">
+      {% if qr_data_uri %}
+        <img src="{{ qr_data_uri }}" alt="Verification QR code" style="width:120px;height:120px">
+        <p class="muted" style="font-size:.7rem;margin-top:4px">Scan to verify this ID</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+<p class="muted" style="text-align:center;font-size:.75rem;max-width:400px;margin:12px auto 0">
+  The QR encodes a signed verification token, not personal data - anyone who scans it sees only
+  name, program and current status, re-checked live against the database at scan time.
+  Verification link: <a href="{{ verify_url }}">{{ verify_url }}</a>
+</p>
+{% endblock %}

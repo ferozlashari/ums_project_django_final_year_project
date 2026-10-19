@@ -1,0 +1,19 @@
+{% extends "core/base.html" %}
+{% block title %}Executive Dashboard{% endblock %}
+{% block content %}
+<div class="page-head"><h2>📊 Executive Oversight</h2></div>
+<p class="muted">University-level view for the Chancellor / Vice Chancellor. Read-only: day-to-day records are changed by the responsible offices, and large decisions reach you as approvals.</p>
+<div class="panel" style="display:flex;gap:22px;flex-wrap:wrap">
+  {% for label, value in stats %}<div><strong style="font-size:1.4rem">{{ value }}</strong><br><span class="muted">{{ label }}</span></div>{% endfor %}
+</div>
+<div class="panel">
+  <h3 style="margin-top:0">Exceptions that need attention</h3>
+  <p>Large refunds waiting for approval: <strong>{{ escalations }}</strong>{% if can_decide %} — <a href="{% url 'workflow-center' %}">open Approval Center</a>{% endif %}</p>
+  <p>Break-glass approvals in the last 30 days: <strong>{{ break_glass }}</strong> <span class="muted">(System Administrator acted because no office holder existed)</span></p>
+  <p>Separation-of-duties violations: <strong>{{ violations|length }}</strong> <a href="{% url 'permission-matrix' %}">details</a></p>
+</div>
+<div class="panel"><h3 style="margin-top:0">Latest audited actions</h3>
+<table class="table"><thead><tr><th>When</th><th>Who</th><th>Action</th><th>Record</th></tr></thead><tbody>
+{% for e in recent %}<tr><td>{{ e.created_at|date:"d M H:i" }}</td><td>{{ e.actor|default:"system" }}</td><td>{{ e.action }}</td><td>{{ e.object_repr }}</td></tr>{% endfor %}
+</tbody></table></div>
+{% endblock %}

@@ -1,0 +1,253 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>{% block title %}{{ site_name }} - {{ site_full_name }}{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Lexend:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="manifest" href="{% static 'manifest.json' %}">
+  <meta name="theme-color" content="#3949e0">
+  <link rel="apple-touch-icon" href="{% static 'img/icon-192.png' %}">
+  <script defer src="{% static 'js/scripts.js' %}"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register("{% static 'js/sw.js' %}").catch(function () {});
+      });
+    }
+  </script>
+</head>
+<body class="{% if user.is_authenticated %}has-sidebar{% endif %}{% if user.is_authenticated and user.profile.high_contrast_mode %} high-contrast{% endif %}{% if user.is_authenticated and user.profile.text_only_mode %} text-only{% endif %}">
+  <header class="site-header">
+    <div class="container header-row">
+      {% if user.is_authenticated %}<button class="nav-toggle" aria-label="Toggle navigation">☰</button>{% endif %}
+      <a class="brand" href="{% url 'index' %}"><span class="brand-mark">U</span>{{ site_name }}<span class="brand-full-name">{{ site_full_name }}</span></a>
+
+      {% if user.is_authenticated %}
+      <form class="global-search" method="get" action="{% url 'global-search' %}">
+        <input type="search" name="q" placeholder="Search students, courses, books…" value="{{ request.GET.q }}">
+        <button type="submit" aria-label="Search">🔍</button>
+      </form>
+      {% endif %}
+
+      <div class="actions">
+        <button type="button" id="theme-toggle" class="btn ghost icon-btn" aria-label="Toggle dark mode" title="Toggle dark mode">🌙</button>
+        {% if user.is_authenticated %}
+          <a class="btn ghost" href="{% url 'ai-chat' %}">🤖 Assistant</a>
+          <div class="notif-dropdown">
+            <a class="btn ghost icon-btn notif-bell" href="{% url 'notifications-list' %}" aria-label="Notifications" title="Notifications">
+              🔔{% if unread_notification_count %}<span class="notif-badge">{{ unread_notification_count }}</span>{% endif %}
+            </a>
+            {% if recent_notifications %}
+            <div class="notif-panel">
+              {% for n in recent_notifications %}
+                <form method="post" action="{% url 'notification-read' n.pk %}" class="notif-item{% if not n.is_read %} unread{% endif %}" style="margin:0">
+                  {% csrf_token %}
+                  <button type="submit" style="all:unset;display:block;width:100%;cursor:pointer">
+                    <strong>{{ n.title }}</strong>
+                    {% if n.message %}<span>{{ n.message|truncatechars:70 }}</span>{% endif %}
+                  </button>
+                </form>
+              {% endfor %}
+              <a class="notif-item notif-view-all" href="{% url 'notifications-list' %}">View all notifications</a>
+            </div>
+            {% endif %}
+          </div>
+          <a class="btn ghost" href="{% url 'profile' %}">👤 {{ user.username }}</a>
+          <form method="post" action="{% url 'logout' %}" style="display:inline;margin:0">
+            {% csrf_token %}
+          <button class="btn" type="submit">Logout</button>
+          </form>
+        {% else %}
+          <a class="btn ghost" href="{% url 'login' %}">Login</a>
+          <a class="btn" href="{% url 'register' %}">Register</a>
+        {% endif %}
+      </div>
+    </div>
+  </header>
+
+  <div class="app-shell">
+    {% if user.is_authenticated %}
+    <aside class="sidebar" id="sidebar">
+      <nav>
+        <div class="sidebar-group">
+          <a href="{% url 'dashboard' %}">🏠 Dashboard</a>
+          <a href="{% url 'notices-list' %}">📢 Notices</a>
+          <a href="{% url 'account-settings' %}">⚙️ Settings</a>
+        </div>
+
+        {% if current_role == 'guardian' %}
+        <div class="sidebar-group">
+          <span class="sidebar-heading">My Children</span>
+          <a href="{% url 'guardian-dashboard' %}">👪 Guardian Dashboard</a>
+          <a href="{% url 'guardian-request-link' %}">🔗 Link a Student</a>
+        </div>
+        {% else %}
+
+        <div class="sidebar-group">
+          <span class="sidebar-heading">Academics</span>
+          {% if current_role == 'admin' or current_role == 'faculty' or current_role == 'staff' %}<a href="{% url 'student-list' %}">🎓 Students</a>{% endif %}
+          {% if current_role == 'admin' %}<a href="{% url 'teacher-list' %}">👩‍🏫 Teachers</a>{% endif %}
+          <a href="{% url 'course-list' %}">📘 Courses</a>
+          {% if current_role == 'admin' %}
+            <a href="{% url 'faculty-list' %}">🏫 Faculties</a>
+            <a href="{% url 'department-list' %}">🏛️ Departments</a>
+            <a href="{% url 'program-list' %}">🎓 Programs</a>
+            <a href="{% url 'section-list' %}">🧩 Course Sections</a>
+          {% endif %}
+          {% if current_role == 'admin' or current_role == 'staff' %}<a href="{% url 'setup-hub' %}">🧭 Data Entry Hub</a>{% endif %}
+          {% if current_role == 'faculty' or current_role == 'admin' %}
+            <a href="{% url 'teacher-attendance-summary' %}">📊 Attendance — all classes</a>
+            <a href="{% url 'teacher-marks-all' %}">📝 Marks — all classes</a>
+          {% endif %}
+          {% if current_role == 'student' %}<a href="{% url 'browse-sections' %}">📝 Course Selection</a>{% endif %}
+          <a href="{% url 'timetable-list' %}">🗓️ Timetable</a>
+          <a href="{% url 'attendance-list' %}">✅ Attendance</a>
+          <a href="{% url 'exams' %}">📝 Exams</a>
+          {% if current_role == 'student' %}<a href="{% url 'my-exam-slip' %}">🎫 Exam Slip</a>{% endif %}
+          <a href="{% url 'results' %}">📊 Results</a>
+          {% if current_role == 'student' %}
+            <a href="{% url 'gpa-calculator' %}">🧮 GPA / CGPA</a>
+            <a href="{% url 'my-retake-applications' %}">🔁 Improvement / Retake</a>
+          {% endif %}
+          {% if current_role == 'admin' or current_role == 'faculty' or current_role == 'staff' %}
+            <a href="{% url 'manage-retake-applications' %}">🔁 Improvement / Retake Requests</a>
+          {% endif %}
+          <a href="{% url 'result-checker' %}">🔎 Check Result</a>
+          <a href="{% url 'class-list' %}">🎥 Online Classes</a>
+          <a href="{% url 'assignment-list' %}">📝 Assignments</a>
+          <a href="{% url 'quiz-list' %}">🧩 Quizzes</a>
+          {% if current_role == 'student' %}<a href="{% url 'my-id-card' %}">🪪 My ID Card</a>{% endif %}
+          <a href="{% url 'document-center' %}">📄 {% if current_role == 'student' %}My Documents{% else %}Document Center{% endif %}</a>
+        </div>
+
+        <div class="sidebar-group">
+          <span class="sidebar-heading">Campus Life</span>
+          <a href="{% url 'applications-list' %}">📝 Admissions</a>
+          <a href="{% url 'book-list' %}">📚 Library</a>
+          <a href="{% url 'hostel-my-application' %}">🏠 Hostel</a>
+          <a href="{% url 'scholarship-list' %}">🎓 Scholarships</a>
+          <a href="{% url 'my-complaints' %}">🗣️ Complaints</a>
+          <a href="{% url 'alumni-directory' %}">🎓 Alumni Network</a>
+          <a href="{% url 'job-list' %}">💼 Career Services</a>
+          <a href="{% url 'my-transport' %}">🚌 Transport</a>
+          {% if current_role == 'faculty' or current_role == 'staff' %}<a href="{% url 'my-salary' %}">💰 My Salary</a>{% endif %}
+        </div>
+
+        <div class="sidebar-group">
+          <span class="sidebar-heading">Finance</span>
+          <a href="{% url 'fees-list' %}">💳 Fees &amp; Challans</a>
+          {% if current_role == 'admin' %}
+            <a href="{% url 'pending-payments' %}">🧾 Pending Payments</a>
+          {% endif %}
+        </div>
+
+        {% if current_role == 'admin' or current_role == 'faculty' or current_role == 'staff' %}
+        <div class="sidebar-group">
+          <span class="sidebar-heading">Manage</span>
+          <a href="{% url 'all-loans' %}">📖 Library Loans</a>
+          {% if current_role == 'admin' %}
+          <a href="{% url 'hostel-manage' %}">🏠 Hostel Applications</a>
+          {% endif %}
+          <a href="{% url 'manage-complaints' %}">🗣️ Resolve Complaints</a>
+          <a href="{% url 'manage-scholarships' %}">🎓 Manage Scholarships</a>
+          {% if current_role == 'faculty' or current_role == 'staff' %}<a href="{% url 'my-workflow-requests' %}">📋 My Approval Requests</a>{% endif %}
+        </div>
+        {% endif %}
+
+        {% if current_role == 'admin' or current_role == 'faculty' or current_role == 'staff' %}
+        <div class="sidebar-group">
+          <span class="sidebar-heading">Insights</span>
+          {% if current_role == 'admin' %}
+          <a href="{% url 'reports' %}">📈 Reports</a>
+          <a href="{% url 'analytics' %}">📊 Analytics</a>
+          {% endif %}
+          <a href="{% url 'retention-dashboard' %}">🚨 Early-Warning Dashboard</a>
+        </div>
+        {% endif %}
+
+        <div class="sidebar-group">
+          <span class="sidebar-heading">Governance</span>
+          <a href="{% url 'my-access' %}">🔑 My Access</a>
+          <a href="{% url 'governance-map' %}">🏛️ University Map</a>
+          {% if nav_executive %}<a href="{% url 'executive-dashboard' %}">📊 Executive Dashboard</a>{% endif %}
+          {% if nav_approvals %}<a href="{% url 'workflow-center' %}">🔄 Approvals Inbox</a>{% endif %}
+          {% if nav_matrix %}<a href="{% url 'permission-matrix' %}">🧾 Permission Matrix</a>{% endif %}
+          {% if nav_provision %}<a href="{% url 'provision-account' %}">➕ Create Office Account</a>{% endif %}
+        </div>
+
+        {% if current_role == 'admin' %}
+        <div class="sidebar-group">
+          <span class="sidebar-heading">Admin</span>
+          {% if user.is_superuser %}<a href="{% url 'security-center' %}">🛡️ Security &amp; Policy Center</a>
+          <a href="{% url 'grade-scale' %}">🎓 Grade Scale</a>{% endif %}
+          <a href="{% url 'site-settings' %}">⚙️ Site Settings</a>
+          <a href="{% url 'exception-center' %}">🚨 Exception Center</a>
+          <a href="{% url 'data-quality-center' %}">🧹 Data Quality Center</a>
+          <a href="{% url 'audit-log' %}">🔍 Audit Log</a>
+          <a href="{% url 'biometric-command-center' %}">🔐 Biometric Command Center</a>
+          <a href="{% url 'seat-summary' %}">🎯 Seat Summary</a>
+          <a href="{% url 'automation-center' %}">⚙️ Automation Center</a>
+          <a href="{% url 'results-workflow' %}">✅ Result Verification</a>
+          <a href="{% url 'attendance-corrections' %}">🕘 Attendance Corrections</a>
+          <a href="{% url 'manage-guardian-links' %}">👪 Guardian Link Requests</a>
+          <a href="{% url 'merit-list' %}">🏆 Merit List</a>
+          <a href="{% url 'hostel-list' %}">🏢 Hostel Buildings</a>
+          <a href="{% url 'transport-route-list' %}">🚌 Transport Routes</a>
+          <a href="{% url 'payroll-list' %}">💰 Payroll (Staff Salaries)</a>
+          <a href="/admin/">🛠️ UMS Admin</a>
+        </div>
+        {% endif %}
+        {% endif %}
+      </nav>
+    </aside>
+    {% endif %}
+
+    <main class="main-area">
+      <div class="container main">
+        {% if messages %}
+          <div class="msgs">
+            {% for m in messages %}
+              <div class="msg {{ m.tags }}">{{ m }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+        {% block content %}{% endblock %}
+      </div>
+
+      <footer class="site-footer">
+        <div class="container">
+          <div class="footer-grid">
+            <div>
+              <h4>{{ site_name }}</h4>
+              <p>{{ site_full_name }}</p>
+            </div>
+            {% if user.is_authenticated %}
+            <div>
+              <h4>Quick Links</h4>
+              <ul>
+                <li><a href="{% url 'dashboard' %}">My Dashboard</a></li>
+                {% if current_role == 'admin' %}<li><a href="{% url 'reports' %}">Reports</a></li>{% endif %}
+                <li><a href="{% url 'timetable-list' %}">Timetable</a></li>
+              </ul>
+            </div>
+            {% endif %}
+          </div>
+          <p class="copyright">&copy; {{ year }} {{ site_name }}. All rights reserved.</p>
+        </div>
+      </footer>
+    </main>
+  </div>
+
+  {% if user.is_authenticated %}
+  {% include "ai_assistant/_widget.html" %}
+  {% endif %}
+
+  {% if user.is_authenticated %}<script src="{% static 'js/webauthn.js' %}"></script>{% endif %}
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

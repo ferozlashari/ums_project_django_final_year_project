@@ -1,0 +1,71 @@
+{% extends "core/base.html" %}
+{% block title %}University Governance Map{% endblock %}
+{% block content %}
+<style>
+  .gm-flow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:8px 0}
+  .gm-flow .n{background:var(--card,#fff);border:1px solid #cbd5e1;border-radius:8px;padding:6px 10px;font-size:.85rem;font-weight:600}
+  .gm-flow .a{color:#64748b}
+  .gm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+  .gm-card{border:1px solid #cbd5e1;border-radius:10px;padding:10px 12px;background:var(--card,#fff)}
+  .gm-card h4{margin:0 0 6px}
+  .gm-role{border-top:1px dashed #cbd5e1;padding:6px 0;font-size:.88rem}
+  .gm-tag{display:inline-block;background:#e0e7ff;color:#3730a3;border-radius:999px;padding:1px 8px;font-size:.72rem;margin:1px}
+  .gm-tree ul{list-style:none;margin:4px 0 4px 18px;padding-left:12px;border-left:2px solid #cbd5e1}
+</style>
+<div class="page-head"><h2>🏛️ University Governance Map</h2></div>
+<p class="muted">UMS is a role-based institutional system: every office has its own people and permissions, sensitive actions need more than one person, and the system administrator runs the software without holding university authority.</p>
+
+<div class="panel">
+  <h3>1. How authority is layered</h3>
+  <div class="gm-flow">
+    <span class="n">University Governance</span><span class="a">→</span>
+    <span class="n">Role-based administration</span><span class="a">→</span>
+    <span class="n">Faculty / Department / Office scope</span><span class="a">→</span>
+    <span class="n">Specific permission</span><span class="a">→</span>
+    <span class="n">Specific record (object level)</span><span class="a">→</span>
+    <span class="n">Approval workflow</span><span class="a">→</span>
+    <span class="n">Audit log</span>
+  </div>
+</div>
+
+<div class="panel">
+  <h3>2. Academic lifecycle</h3>
+  <div class="gm-flow"><span class="n">Faculty</span><span class="a">→</span><span class="n">Department</span><span class="a">→</span><span class="n">Program</span><span class="a">→</span><span class="n">Curriculum</span><span class="a">→</span><span class="n">Course</span><span class="a">→</span><span class="n">Section</span><span class="a">→</span><span class="n">Teacher</span><span class="a">→</span><span class="n">Registration</span><span class="a">→</span><span class="n">Attendance</span><span class="a">→</span><span class="n">Assessment</span><span class="a">→</span><span class="n">Result</span><span class="a">→</span><span class="n">GPA / CGPA</span><span class="a">→</span><span class="n">Graduation</span></div>
+  <h3>Admission lifecycle</h3>
+  <div class="gm-flow"><span class="n">Applicant</span><span class="a">→</span><span class="n">Program preferences (up to 5)</span><span class="a">→</span><span class="n">Eligibility</span><span class="a">→</span><span class="n">Merit</span><span class="a">→</span><span class="n">Committee selection</span><span class="a">→</span><span class="n">Offer</span><span class="a">→</span><span class="n">Admission fee</span><span class="a">→</span><span class="n">Enrolment</span></div>
+  <h3>Finance lifecycle</h3>
+  <div class="gm-flow"><span class="n">Fee policy</span><span class="a">→</span><span class="n">Invoice</span><span class="a">→</span><span class="n">Challan</span><span class="a">→</span><span class="n">Payment</span><span class="a">→</span><span class="n">Receipt</span><span class="a">→</span><span class="n">Ledger</span><span class="a">→</span><span class="n">Reconciliation</span></div>
+  <h3>Result publication (three different people)</h3>
+  <div class="gm-flow"><span class="n">Teacher submits marks</span><span class="a">→</span><span class="n">HOD / Dean verifies</span><span class="a">→</span><span class="n">Exam Officer approves</span><span class="a">→</span><span class="n">Controller publishes</span><span class="a">→</span><span class="n">Locked</span></div>
+  <h3>Refund / fee adjustment</h3>
+  <div class="gm-flow"><span class="n">Finance Officer raises</span><span class="a">→</span><span class="n">Finance review</span><span class="a">→</span><span class="n">Finance Manager approves</span><span class="a">→</span><span class="n">VC approves if large</span><span class="a">→</span><span class="n">Cashier posts</span><span class="a">→</span><span class="n">Audit</span></div>
+</div>
+
+<div class="panel">
+  <h3>3. Offices and roles</h3>
+  <div class="gm-grid">
+  {% for o in offices %}{% if o.roles %}
+    <div class="gm-card"><h4>{{ o.label }}</h4>
+    {% for r in o.roles %}
+      <div class="gm-role"><strong>{{ r.role.name }}</strong> <span class="muted">({{ r.perm_count }} permissions)</span><br>
+        <span class="muted">{{ r.role.description }}</span><br>
+        {% for m in r.modules %}<span class="gm-tag">{{ m }}</span>{% endfor %}
+        {% if show_people %}<br>{% for a in r.holders %}<span class="muted">👤 {{ a.user.get_full_name|default:a.user.username }} — {{ a.get_scope_type_display }}{% if a.scope_id %} #{{ a.scope_id }}{% endif %}</span><br>{% empty %}<span class="muted">No one assigned yet</span>{% endfor %}{% endif %}
+      </div>
+    {% endfor %}</div>
+  {% endif %}{% endfor %}
+  </div>
+  <p class="muted" style="margin-top:10px">Teacher and Student are operational roles: a teacher only touches the sections they are assigned to, and a student only sees their own records.</p>
+</div>
+
+<div class="panel gm-tree">
+  <h3>4. Academic structure (live data)</h3>
+  {% for f in faculties %}
+  <strong>🏫 {{ f.faculty.name }}</strong>
+  <ul>{% for d in f.departments %}
+    <li>🏢 {{ d.dept.name }} <span class="muted">— {{ d.course_count }} courses</span>
+      <ul>{% for p in d.programs %}<li>🎓 {{ p.name }}</li>{% empty %}<li class="muted">No programs yet</li>{% endfor %}</ul></li>
+  {% empty %}<li class="muted">No departments yet</li>{% endfor %}</ul>
+  {% empty %}<p class="muted">No faculties have been created yet.</p>{% endfor %}
+</div>
+{% endblock %}

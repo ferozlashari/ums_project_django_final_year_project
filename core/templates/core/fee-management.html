@@ -1,0 +1,54 @@
+{% extends "core/base.html" %}
+{% block title %}Fee Management{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>Fee &amp; Challan Management</h2>
+  {% if role == 'admin' %}<a class="btn" href="{% url 'fee-add' %}">+ Generate Challan</a>{% endif %}
+</div>
+
+{% if role == 'student' %}
+<div class="stat-grid" style="margin-bottom:16px">
+  <div class="stat-card {% if outstanding_total %}stat-card-warn{% endif %}"><span class="stat-value">Rs. {{ outstanding_total|default:0 }}</span><span class="stat-label">Outstanding</span></div>
+  <div class="stat-card"><span class="stat-value">Rs. {{ paid_total|default:0 }}</span><span class="stat-label">Paid</span></div>
+</div>
+{% endif %}
+
+{% if role == 'student' and available_challans %}
+<div class="panel" style="margin-bottom:16px">
+  <div class="muted" style="font-size:.85rem;margin-bottom:8px">Generate a challan for any service you're currently eligible for. Each one is checked against your own record before it's created.</div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap">
+    {% for kind, label in available_challans %}
+    <form method="post" action="{% url 'generate-my-challan' kind %}">{% csrf_token %}
+      <button class="btn {% if not forloop.first %}ghost{% endif %}" type="submit">+ Generate {{ label }} Challan</button>
+    </form>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<div class="panel">
+<input type="text" placeholder="Filter by student or challan no…" data-table-filter="#fee-table" style="margin-bottom:12px;width:100%;max-width:320px;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text)">
+<table class="table" id="fee-table">
+  <thead><tr><th>Challan #</th><th>Student</th><th>Category</th><th>Amount</th><th>Due</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+    {% for f in fees %}
+    <tr>
+      <td>{{ f.challan_no }}</td>
+      <td>{{ f.student }}</td>
+      <td>{{ f.get_category_display }}</td>
+      <td>Rs. {{ f.amount }}</td>
+      <td>{{ f.due_date|default:"—" }}</td>
+      <td>
+        <span class="badge {% if f.paid %}badge-paid{% elif f.is_overdue %}badge-overdue{% else %}badge-pending{% endif %}">
+          {% if f.paid %}Paid{% elif f.is_overdue %}Overdue{% else %}Unpaid{% endif %}
+        </span>
+      </td>
+      <td><a class="btn ghost" href="{% url 'challan-detail' f.pk %}">View</a></td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="7" class="empty-row">No invoices yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

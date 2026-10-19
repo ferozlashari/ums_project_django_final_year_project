@@ -1,0 +1,59 @@
+{% extends "core/base.html" %}
+{% block title %}Apply for Hostel{% endblock %}
+{% block content %}
+<div class="page-head"><h2>🏠 Apply for Hostel</h2></div>
+
+<div class="panel" style="margin-bottom:20px">
+  <h3 style="margin-top:0">Hostels Available to You</h3>
+  <p class="muted">Only hostels matching your registered gender are shown here, for safety and privacy.</p>
+  <div class="cards-grid">
+    {% for h in gender_hostels %}
+    <div class="panel" style="background:var(--bg)">
+      <h4 style="margin-top:0">{{ h.name }}</h4>
+      <p class="muted" style="margin:2px 0">{{ h.get_gender_display }}{% if h.address %} &middot; {{ h.address }}{% endif %}</p>
+      {% if h.warden_name %}<p class="muted" style="margin:2px 0;font-size:.82rem">Warden: {{ h.warden_name }}{% if h.warden_phone %} ({{ h.warden_phone }}){% endif %}</p>{% endif %}
+      <p style="margin:6px 0 0"><strong>{{ h.total_capacity }}</strong> total beds, <strong>{{ h.total_occupied }}</strong> occupied</p>
+    </div>
+    {% empty %}
+    <p class="empty-row">No hostels are configured for your gender yet - contact admin.</p>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="panel" style="margin-bottom:20px">
+  <h3 style="margin-top:0">Room Type Availability</h3>
+  <p class="muted">Real room counts, updated live - pick the type with open spots, and admin will assign you a specific room from it.</p>
+  <div class="cards-grid">
+    {% for type_value, info in availability_by_type.items %}
+    <div class="panel" style="background:var(--bg)">
+      <h4 style="margin-top:0">{{ info.label }}</h4>
+      {% if info.total_count == 0 %}
+        <p class="muted">No rooms of this type configured yet.</p>
+      {% else %}
+        <p style="font-size:1.4rem;font-weight:700;margin:4px 0">{{ info.open_count }} / {{ info.total_count }} <span style="font-size:.9rem;font-weight:400;color:var(--muted)">open</span></p>
+        <ul style="margin:8px 0 0;padding-left:18px;font-size:.85rem">
+          {% for r in info.rooms %}
+          <li>{{ r.hostel.name }} {{ r.block }}-{{ r.number }}: {{ r.occupied_count }}/{{ r.capacity }} taken
+            {% if r.is_full %}<span class="badge badge-unavailable">Full</span>{% else %}<span class="badge badge-available">Open</span>{% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="panel" style="max-width:560px">
+  <h3 style="margin-top:0">Application Form</h3>
+  <p class="muted">A scanned CNIC/B-Form copy is required. Guardian consent and medical certificate may also be required depending on your program.</p>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <div class="form-actions">
+      <button class="btn" type="submit">Submit Application</button>
+      <a class="btn ghost" href="{{ cancel_url }}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

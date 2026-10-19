@@ -1,0 +1,68 @@
+{% extends "core/base.html" %}
+{% block title %}Results{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>Results</h2>
+  {% if role == 'admin' or role == 'faculty' or role == 'staff' %}
+  <a class="btn" href="{% url 'grade-add' %}">+ Record Grade</a>
+  {% endif %}
+</div>
+
+{% if role == 'faculty' or role == 'staff' %}
+{% if my_courses %}
+<form method="get" class="panel" style="display:flex;gap:10px;align-items:end;margin-bottom:16px">
+  <div>
+    <label>My Subject</label><br>
+    <select name="course">
+      <option value="">All my subjects</option>
+      {% for course_id, code, name in my_courses %}
+      <option value="{{ course_id }}" {% if course_filter == course_id|stringformat:"s" %}selected{% endif %}>{{ code }} - {{ name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <button class="btn ghost" type="submit">Filter</button>
+</form>
+{% endif %}
+<p class="muted" style="margin-top:-8px">Marks lock automatically once entered — see the Status column. An administrator can unlock any entry.</p>
+{% endif %}
+
+<div class="panel">
+<table class="table">
+  <thead><tr><th>#</th><th>Student</th><th>Exam</th><th>Attendance</th><th>Assignment</th><th>Midterm</th><th>Final</th><th>Total</th><th>Grade</th>{% if role == 'admin' or role == 'faculty' or role == 'staff' %}<th>Status</th><th></th>{% endif %}</tr></thead>
+  <tbody>
+    {% for r in results %}
+    <tr>
+      <td>{{ forloop.counter }}</td>
+      <td>{{ r.student }}</td>
+      <td>{{ r.exam }}</td>
+      <td>{{ r.attendance_marks|default:"—" }}</td>
+      <td>{{ r.assignment_marks|default:"—" }}</td>
+      <td>{{ r.midterm_marks|default:"—" }}</td>
+      <td>{{ r.final_marks|default:"—" }}</td>
+      <td><strong>{{ r.marks }}</strong></td>
+      <td>{{ r.letter_grade }}</td>
+      {% if role == 'admin' or role == 'faculty' or role == 'staff' %}
+      <td>
+        {% if r.is_locked %}
+          <span class="badge badge-unavailable" title="Locked on {{ r.lock_date|date:'Y-m-d' }}">🔒 Locked</span>
+        {% else %}
+          <span class="badge badge-available">🔓 Editable</span>
+        {% endif %}
+      </td>
+      <td style="display:flex;gap:6px">
+        {% if not r.is_locked or role == 'admin' %}
+        <a class="btn ghost" href="{% url 'grade-edit' r.pk %}">Edit</a>
+        {% endif %}
+        {% if r.is_locked and role == 'admin' %}
+        <form method="post" action="{% url 'grade-unlock' r.pk %}">{% csrf_token %}<button class="btn ghost" type="submit">Unlock</button></form>
+        {% endif %}
+      </td>
+      {% endif %}
+    </tr>
+    {% empty %}
+    <tr><td colspan="11" class="empty-row">No results published yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

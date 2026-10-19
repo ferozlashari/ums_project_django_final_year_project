@@ -1,0 +1,43 @@
+{% extends "core/base.html" %}
+{% block title %}Career Services{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>💼 Career Services &amp; Placement</h2>
+  <div style="display:flex;gap:8px">
+    {% if student %}
+    <a class="btn ghost" href="{% url 'my-resume' %}">My Resume</a>
+    <a class="btn ghost" href="{% url 'my-job-applications' %}">My Applications</a>
+    {% endif %}
+    {% if current_role == 'admin' or current_role == 'faculty' or current_role == 'staff' %}
+    <a class="btn" href="{% url 'manage-postings' %}">Manage Postings</a>
+    {% endif %}
+  </div>
+</div>
+
+<form method="get" class="panel" style="display:flex;gap:10px;align-items:end;margin-bottom:16px">
+  <div><label>Search</label><br><input type="text" name="q" value="{{ q }}" placeholder="Title, employer, major"></div>
+  <button class="btn ghost" type="submit">Filter</button>
+  {% if q %}<a class="btn ghost" href="{% url 'job-list' %}">Clear</a>{% endif %}
+</form>
+
+<div class="cards-grid">
+  {% for p in postings %}
+  <div class="panel">
+    <h3 style="margin-top:0">{{ p.title }}</h3>
+    <p class="muted">{{ p.employer.name }} &middot; {{ p.get_posting_type_display }}{% if p.location %} &middot; {{ p.location }}{% endif %}</p>
+    <p>{{ p.description|truncatewords:30 }}</p>
+    {% if p.relevant_majors %}<p class="muted" style="font-size:.8rem">Suited for: {{ p.relevant_majors }}</p>{% endif %}
+    {% if p.application_deadline %}<p class="muted" style="font-size:.8rem">Apply by {{ p.application_deadline }}</p>{% endif %}
+    {% if student %}
+      {% if p.pk in applied_ids %}
+        <span class="badge badge-pending">Applied</span>
+      {% else %}
+        <a class="btn" href="{% url 'job-apply' p.pk %}">Apply</a>
+      {% endif %}
+    {% endif %}
+  </div>
+  {% empty %}
+  <p class="empty-row">No open postings right now.</p>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends "core/base.html" %}
+{% block title %}{{ oc.title }} - Live Class{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>🎥 {{ oc.title }}</h2>
+  <a class="btn ghost" href="{% url 'class-list' %}">Back to Classes</a>
+</div>
+
+{% if oc.notes %}<div class="panel" style="margin-bottom:14px"><strong>Agenda:</strong> {{ oc.notes }}</div>{% endif %}
+<p class="muted" style="margin:-6px 0 12px">🎙️ Audio · 📹 Video · 🖥️ Screen sharing — all built in, free, no plugin needed.</p>
+
+{% if role == 'student' %}
+<div class="panel" style="margin-bottom:14px">
+  {% if is_verified %}
+    <span class="badge badge-yes">✅ Attendance verified for this class</span>
+  {% else %}
+    <p class="muted" style="margin:0 0 8px">Verify your identity to record attendance for this class (optional).</p>
+    <form method="post" action="{% url 'verify-online-class-join' oc.pk %}">
+      {% csrf_token %}
+      <button class="btn ghost" type="button" data-webauthn-verify="1">🔐 Verify Identity &amp; Mark Attendance</button>
+      <span data-webauthn-status class="muted" style="display:block;font-size:.78rem;margin-top:4px"></span>
+    </form>
+  {% endif %}
+</div>
+{% endif %}
+
+{% if oc.is_joinable %}
+  <div class="panel" style="padding:0;overflow:hidden">
+    <div id="jitsi-container" style="height:70vh;width:100%"></div>
+  </div>
+  <script src="https://meet.jit.si/external_api.js"></script>
+  <script>
+    try {
+      new JitsiMeetExternalAPI("meet.jit.si", {
+        roomName: "{{ oc.room_code }}",
+        parentNode: document.getElementById('jitsi-container'),
+        userInfo: { displayName: "{{ user.get_full_name|default:user.username|escapejs }}" },
+        configOverwrite: {
+          prejoinPageEnabled: true,
+          startWithAudioMuted: false,
+          startWithVideoMuted: false,
+        },
+        interfaceConfigOverwrite: {
+          TOOLBAR_BUTTONS: [
+            'microphone', 'camera', 'desktop', 'fullscreen', 'chat',
+            'raisehand', 'participants-pane', 'tileview', 'hangup', 'settings',
+          ],
+        },
+      });
+    } catch (e) {
+      document.getElementById('jitsi-container').innerHTML =
+        '<p style="padding:20px">Could not load the video call widget. You can also join directly at ' +
+        '<a href="{{ oc.jitsi_room_url }}" target="_blank" rel="noopener">{{ oc.jitsi_room_url }}</a></p>';
+    }
+  </script>
+{% else %}
+  <div class="panel">
+    <p>This class isn't open yet. It becomes joinable 10 minutes before the scheduled time:</p>
+    <p><strong>{{ oc.scheduled_at|date:"M d, Y H:i" }}</strong></p>
+  </div>
+{% endif %}
+{% endblock %}

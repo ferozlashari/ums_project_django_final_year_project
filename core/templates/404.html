@@ -1,0 +1,10 @@
+{% extends "core/base.html" %}
+{% block title %}Page Not Found{% endblock %}
+{% block content %}
+<div class="panel" style="text-align:center;max-width:520px;margin:40px auto;padding:40px 30px;">
+  <div style="font-size:3rem;">🔍</div>
+  <h2>Page Not Found</h2>
+  <p style="color:var(--muted)">The page you're looking for doesn't exist or may have been moved.</p>
+  <a class="btn" href="{% url 'index' %}">Back to Home</a>
+</div>
+{% endblock %}

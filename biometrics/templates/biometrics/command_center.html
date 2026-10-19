@@ -1,0 +1,41 @@
+{% extends "core/base.html" %}
+{% block title %}Biometric Command Center{% endblock %}
+{% block content %}
+<div class="page-head"><h2>🔐 Biometric Command Center</h2>
+  <a class="btn ghost" href="/admin/biometrics/biometricproviderconfig/add/">+ Add Device</a></div>
+<p class="muted">Every row below is read from real configuration and real verification events — nothing here is simulated.</p>
+
+<div class="stat-grid">
+  <div class="stat-card"><span class="stat-label">Verified Today</span><span class="stat-value">{{ event_counts.verified }}</span></div>
+  <div class="stat-card{% if event_counts.rejected %} stat-card-warn{% endif %}"><span class="stat-label">Rejected Today</span><span class="stat-value">{{ event_counts.rejected }}</span></div>
+  <div class="stat-card{% if event_counts.offline %} stat-card-warn{% endif %}"><span class="stat-label">Offline Attempts Today</span><span class="stat-value">{{ event_counts.offline }}</span></div>
+  <div class="stat-card"><span class="stat-label">Manual Overrides Today</span><span class="stat-value">{{ event_counts.manual }}</span></div>
+</div>
+
+<div class="panel" style="margin-top:18px">
+  <h3>Devices</h3>
+  {% if total_devices %}
+  <table class="table">
+    <thead><tr><th>Device</th><th>Type</th><th>Campus</th><th>Status</th><th>Last Heartbeat</th></tr></thead>
+    <tbody>
+    {% for row in device_rows %}
+      <tr>
+        <td>{{ row.device.name }} <span class="muted">({{ row.device.device_identifier }})</span></td>
+        <td>{{ row.device.get_provider_type_display }}</td>
+        <td>{{ row.device.campus|default:"—" }}</td>
+        <td>
+          {% if row.status == 'online' %}<span class="badge badge-success">● Online</span>
+          {% elif row.status == 'offline' %}<span class="badge badge-danger">● Offline</span>
+          {% elif row.status == 'never_seen' %}<span class="badge badge-warning">● Never contacted</span>
+          {% else %}<span class="badge">● Disabled</span>{% endif %}
+        </td>
+        <td>{{ row.device.last_seen_at|default:"Never" }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="empty-row">No biometric devices configured.</p>
+  {% endif %}
+</div>
+{% endblock %}

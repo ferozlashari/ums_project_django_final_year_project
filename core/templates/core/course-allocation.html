@@ -1,0 +1,33 @@
+{% extends "core/base.html" %}
+{% block title %}Course Allocation{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>Course Catalog &amp; Allocation</h2>
+  <a class="btn" href="{% url 'course-add' %}">+ Add Course</a>
+</div>
+<form method="get" class="search-bar">
+  <input type="text" name="q" placeholder="Search by code or name..." value="{{ query }}">
+  <button class="btn ghost" type="submit">Search</button>
+</form>
+<div class="panel">
+<table class="table">
+  <thead><tr><th>#</th><th>Code</th><th>Name</th><th>Program</th><th>Credits</th><th>Sections</th><th>Actions</th></tr></thead>
+  <tbody>
+    {% for c in courses %}
+    <tr>
+      <td>{{ forloop.counter }}</td>
+      <td>{{ c.code }}</td>
+      <td>{{ c.name }}</td>
+      <td>{{ c.program }}</td>
+      <td>{{ c.credits }}</td>
+      <td>{{ c.sections.count }}</td>
+      <td class="row-actions"><a href="{% url 'course-edit' c.id %}">Edit</a></td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="7" class="empty-row">No courses yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+<p class="muted" style="margin-top:10px">Manage individual sections (teacher assignment, capacity) in <a href="{% url 'section-list' %}">Course Sections</a>.</p>
+{% endblock %}

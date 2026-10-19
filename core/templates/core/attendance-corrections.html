@@ -1,0 +1,16 @@
+{% extends "core/base.html" %}
+{% block title %}Attendance Corrections{% endblock %}
+{% block content %}
+<div class="page-head"><h2>🕘 Attendance Correction Requests</h2></div>
+<p class="muted" style="margin-top:-8px">Approving reopens the finalised sheet so the teacher can re-save it. Both outcomes are audited and the teacher is notified.</p>
+<div class="panel"><table class="table">
+  <thead><tr><th>Class</th><th>Date</th><th>Requested by</th><th>Reason</th><th>Decision</th></tr></thead><tbody>
+  {% for r in requests %}
+  <tr><td>{{ r.session.section.course.code }} (Sec {{ r.session.section.code|default:"—" }})</td><td>{{ r.session.date|date:"d M Y" }}</td>
+    <td>{{ r.requested_by.get_full_name|default:r.requested_by.username }}</td><td>{{ r.reason }}</td>
+    <td><form method="post" style="display:flex;gap:6px;flex-wrap:wrap">{% csrf_token %}<input type="hidden" name="req" value="{{ r.pk }}">
+      <input name="note" placeholder="Note (required to reject)">
+      <button class="btn" name="decision" value="approve">Approve</button><button class="btn ghost" name="decision" value="reject">Reject</button></form></td></tr>
+  {% empty %}<tr><td colspan="5" class="muted">No pending requests.</td></tr>{% endfor %}
+  </tbody></table></div>
+{% endblock %}

@@ -1,0 +1,2 @@
+# Extra packages for running the full test suite (not needed to run the site)
+pyyaml>=6.0

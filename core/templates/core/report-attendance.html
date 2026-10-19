@@ -1,0 +1,33 @@
+{% extends "core/base.html" %}
+{% block title %}Attendance Summary{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>Attendance Summary</h2>
+  <a class="btn ghost" href="{% url 'reports' %}">&larr; Back to Reports</a>
+</div>
+
+<div class="stat-grid">
+  <div class="stat-card"><span class="stat-value">{{ total }}</span><span class="stat-label">Total Records</span></div>
+  <div class="stat-card"><span class="stat-value">{{ present }}</span><span class="stat-label">Present</span></div>
+  <div class="stat-card stat-card-warn"><span class="stat-value">{{ absent }}</span><span class="stat-label">Absent</span></div>
+  <div class="stat-card"><span class="stat-value">{{ percentage }}%</span><span class="stat-label">Attendance Rate</span></div>
+</div>
+
+<div class="panel">
+<table class="table">
+  <thead><tr><th>#</th><th>Student</th><th>Present</th><th>Total</th></tr></thead>
+  <tbody>
+    {% for row in by_student %}
+    <tr>
+      <td>{{ forloop.counter }}</td>
+      <td>{{ row.student__full_name }}</td>
+      <td>{{ row.present }}</td>
+      <td>{{ row.total }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="4" class="empty-row">No attendance data yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

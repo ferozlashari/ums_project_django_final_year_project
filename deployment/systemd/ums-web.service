@@ -1,0 +1,14 @@
+[Unit]
+Description=UMS Gunicorn web server
+After=network.target postgresql.service
+[Service]
+User=ums
+Group=ums
+WorkingDirectory=/srv/ums
+# SAME file for every UMS unit: web, worker and beat must share FIELD_ENCRYPTION_KEY.
+EnvironmentFile=/etc/ums/ums.env
+ExecStart=/srv/ums/venv/bin/gunicorn ums_project.wsgi:application --bind 127.0.0.1:8000 --workers 3 --timeout 60
+Restart=always
+RestartSec=5
+[Install]
+WantedBy=multi-user.target

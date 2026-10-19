@@ -1,0 +1,42 @@
+{% extends "core/base.html" %}
+{% block title %}Scholarships{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>🎓 Scholarship Programs</h2>
+  <div style="display:flex;gap:8px">
+    {% if role == 'student' %}<a class="btn ghost" href="{% url 'my-scholarship-applications' %}">My Applications</a>{% endif %}
+    {% if role != 'student' %}<a class="btn" href="{% url 'manage-scholarships' %}">Manage</a>{% endif %}
+  </div>
+</div>
+<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr))">
+  {% for s in scholarships %}
+  <div class="panel">
+    <h3 style="margin-top:0">{{ s.name }}</h3>
+    <p class="muted">{{ s.description|default:"No description provided." }}</p>
+    <p><strong>Award:</strong> Rs. {{ s.amount }}</p>
+    {% if s.eligibility_criteria %}<p><strong>Eligibility:</strong> {{ s.eligibility_criteria }}</p>{% endif %}
+    {% if s.application_deadline %}<p><strong>Deadline:</strong> {{ s.application_deadline }}</p>{% endif %}
+    <p>
+      <strong>Seats:</strong>
+      {% if s.total_seats %}
+        {{ s.seats_filled }} / {{ s.total_seats }} filled
+        {% if s.seats_available <= 0 %}<span class="badge badge-unavailable">Full</span>{% else %}<span class="badge badge-available">{{ s.seats_available }} open</span>{% endif %}
+      {% else %}
+        <span class="muted">Unlimited</span>
+      {% endif %}
+    </p>
+    {% if role == 'student' %}
+      {% if s.id in my_application_ids %}
+        <span class="badge badge-pending">Already Applied</span>
+      {% elif s.total_seats and s.seats_available <= 0 %}
+        <span class="badge badge-unavailable">No seats available</span>
+      {% else %}
+        <a class="btn" href="{% url 'scholarship-apply' s.pk %}">Apply Now</a>
+      {% endif %}
+    {% endif %}
+  </div>
+  {% empty %}
+  <p class="empty-row">No active scholarship programs right now.</p>
+  {% endfor %}
+</div>
+{% endblock %}

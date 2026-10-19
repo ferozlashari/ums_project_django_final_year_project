@@ -1,0 +1,26 @@
+{% extends "core/base.html" %}
+{% block title %}My Complaints{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>📢 My Complaints</h2>
+  <a class="btn" href="{% url 'submit-complaint' %}">+ Submit Complaint</a>
+</div>
+<div class="panel">
+<table class="table">
+  <thead><tr><th>Subject</th><th>Category</th><th>Status</th><th>Submitted</th><th>Response</th></tr></thead>
+  <tbody>
+    {% for c in complaints %}
+    <tr>
+      <td>{{ c.subject }}</td>
+      <td>{{ c.get_category_display }}</td>
+      <td><span class="badge badge-{{ c.status }}">{{ c.get_status_display }}</span></td>
+      <td>{{ c.created_at|date:"M d, Y" }}</td>
+      <td>{{ c.response|default:"—" }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="5" class="empty-row">No complaints submitted yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

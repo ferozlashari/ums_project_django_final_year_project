@@ -1,0 +1,32 @@
+{% extends "core/base.html" %}
+{% block title %}Notifications{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>Notifications</h2>
+  {% if notifications %}
+  <form method="post" action="{% url 'notifications-mark-all-read' %}" style="margin:0">
+    {% csrf_token %}
+    <button class="btn ghost" type="submit">Mark all as read</button>
+  </form>
+  {% endif %}
+</div>
+<div class="notices">
+  {% for n in notifications %}
+  <article class="notice notice-{{ n.level }}{% if not n.is_read %} notice-unread{% endif %}">
+    <h3>{{ n.title }}</h3>
+    <p class="meta">{{ n.created_at|date:"M d, Y H:i" }}{% if not n.is_read %} &middot; <strong>Unread</strong>{% endif %}</p>
+    {% if n.message %}<div>{{ n.message }}</div>{% endif %}
+    {% if n.url %}
+    <form method="post" action="{% url 'notification-read' n.pk %}" style="display:inline">{% csrf_token %}<button class="btn ghost" type="submit">Open</button></form>
+    {% elif not n.is_read %}
+    <form method="post" action="{% url 'notification-read' n.pk %}" style="display:inline">
+      {% csrf_token %}
+      <button class="btn ghost" type="submit">Mark read</button>
+    </form>
+    {% endif %}
+  </article>
+  {% empty %}
+  <p class="empty-row">No notifications yet - you'll see updates here about grades, fees, complaints, hostel, library and more.</p>
+  {% endfor %}
+</div>
+{% endblock %}

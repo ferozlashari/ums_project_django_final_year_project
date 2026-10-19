@@ -1,0 +1,14 @@
+{% extends "core/base.html" %}
+{% block title %}Role assignments{% endblock %}
+{% block content %}
+<div class="page-head"><h2>Role assignments</h2>
+<span><a class="btn" href="{% url 'subadmin-create' %}">➕ New sub-admin</a> <a class="btn ghost" href="{% url 'role-assign' %}">Assign to existing user</a></span></div>
+<div class="panel"><table class="table"><thead><tr><th>User</th><th>Role</th><th>Scope</th><th>Window</th><th>Status</th><th></th></tr></thead><tbody>
+{% for a in assignments %}<tr><td>{{ a.user.username }}</td><td>{{ a.role }}</td>
+<td>{{ a.get_scope_type_display }}{% if a.scope_id %} #{{ a.scope_id }}{% endif %}</td>
+<td>{{ a.start_date|default_if_none:"-" }} → {{ a.end_date|default_if_none:"no expiry" }}</td>
+<td>{% if a.is_current %}Active{% else %}Inactive / expired{% endif %}</td>
+<td>{% if a.is_active %}<form method="post" action="{% url 'role-revoke' a.pk %}">{% csrf_token %}<button class="btn ghost">Revoke</button></form>{% endif %}</td></tr>
+{% empty %}<tr><td colspan="6" class="muted">No assignments yet.</td></tr>{% endfor %}
+</tbody></table></div>
+{% endblock %}

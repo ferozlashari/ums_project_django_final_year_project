@@ -1,0 +1,27 @@
+{% extends "core/base.html" %}
+{% block title %}Departments{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>🏛️ Departments</h2>
+  {% if current_role == 'admin' %}<a class="btn" href="{% url 'department-add' %}">+ Add Department</a>{% endif %}
+</div>
+<div class="panel">
+<table class="table">
+  <thead><tr><th>Name</th><th>Faculty</th><th>Head of Dept.</th><th>Building</th><th>Contact</th>{% if current_role == 'admin' %}<th></th>{% endif %}</tr></thead>
+  <tbody>
+    {% for d in departments %}
+    <tr>
+      <td>{{ d.name }}</td>
+      <td>{{ d.faculty }}</td>
+      <td>{{ d.head_of_department|default:"—" }}</td>
+      <td>{{ d.building|default:"—" }}</td>
+      <td>{{ d.contact_email|default:d.contact_phone|default:"—" }}</td>
+      {% if current_role == 'admin' %}<td><a class="btn ghost" href="{% url 'department-edit' d.pk %}">Edit</a></td>{% endif %}
+    </tr>
+    {% empty %}
+    <tr><td colspan="6" class="empty-row">No departments yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

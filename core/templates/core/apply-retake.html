@@ -1,0 +1,32 @@
+{% extends "core/base.html" %}
+{% block title %}Apply for {{ application_type|title }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>{% if application_type == 'retake' %}🔁 Apply for Retake{% else %}📈 Apply for Improvement{% endif %}</h2>
+</div>
+
+<div class="panel" style="max-width:560px;margin:0 auto">
+  <table class="table">
+    <tr><th>Course</th><td>{{ grade_entry.exam.course.code }} — {{ grade_entry.exam.course.name }}</td></tr>
+    <tr><th>Previous Semester</th><td>{{ grade_entry.exam.semester|default:"—" }}</td></tr>
+    <tr><th>Previous Grade</th><td><strong>{{ grade_entry.letter_grade }}</strong> ({{ grade_entry.marks }} / {{ grade_entry.exam.max_marks }}, {{ grade_entry.percentage }}%)</td></tr>
+    <tr><th>Application Type</th><td>{{ application_type|title }}{% if application_type == 'retake' %} — you failed this course and must pass it{% else %} — you passed with a D and may attempt a better grade{% endif %}</td></tr>
+    <tr><th>Attempts Used</th><td>{{ attempts_used }} / {{ max_attempts }}</td></tr>
+    <tr><th>Application Deadline</th><td>{{ deadline|date:"Y-m-d" }} (from when this grade was recorded)</td></tr>
+    <tr><th>Fee</th><td><strong>Rs. {{ fee }}</strong> — a separate {{ application_type }} challan, generated only after you confirm below</td></tr>
+  </table>
+
+  {% if blocking_reasons %}
+    <div class="msg error">
+      <ul style="margin:8px 0 0 18px">{% for r in blocking_reasons %}<li>{{ r }}</li>{% endfor %}</ul>
+    </div>
+    <a class="btn ghost" style="margin-top:12px" href="{% url 'result-checker' %}">← Back to Results</a>
+  {% else %}
+    <p class="muted" style="margin-top:12px">Confirming will submit this application and immediately generate the fee challan above. You'll need to pay it and wait for staff approval before you can sit the exam.</p>
+    <form method="post">{% csrf_token %}
+      <button class="btn" type="submit">Confirm &amp; Apply</button>
+      <a class="btn ghost" href="{% url 'result-checker' %}">Cancel</a>
+    </form>
+  {% endif %}
+</div>
+{% endblock %}

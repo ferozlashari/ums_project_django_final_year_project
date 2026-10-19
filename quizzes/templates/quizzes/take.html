@@ -1,0 +1,22 @@
+{% extends "core/base.html" %}
+{% block title %}{{ quiz.title }}{% endblock %}
+{% block content %}
+<div class="page-head"><h2>{{ quiz.title }}</h2></div>
+<p class="muted">{{ questions.count }} question(s) &middot; time limit {{ quiz.time_limit_minutes }} minutes &middot; one attempt only - answer carefully.</p>
+
+<form method="post">
+  {% csrf_token %}
+  {% for q in questions %}
+  <div class="panel" style="margin-bottom:14px">
+    <strong>{{ forloop.counter }}. {{ q.text }}</strong>
+    <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px">
+      <label><input type="radio" name="q{{ q.id }}" value="a" required> A) {{ q.choice_a }}</label>
+      <label><input type="radio" name="q{{ q.id }}" value="b"> B) {{ q.choice_b }}</label>
+      {% if q.choice_c %}<label><input type="radio" name="q{{ q.id }}" value="c"> C) {{ q.choice_c }}</label>{% endif %}
+      {% if q.choice_d %}<label><input type="radio" name="q{{ q.id }}" value="d"> D) {{ q.choice_d }}</label>{% endif %}
+    </div>
+  </div>
+  {% endfor %}
+  <button class="btn" type="submit">Submit Quiz</button>
+</form>
+{% endblock %}

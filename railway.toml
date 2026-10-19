@@ -1,0 +1,15 @@
+# Railway: builds the Dockerfile and runs the single-process start script
+# (migrate + collectstatic + built-in scheduler + gunicorn). Add a PostgreSQL plugin; Railway
+# injects DATABASE_URL, PORT and RAILWAY_PUBLIC_DOMAIN (trusted automatically by the app).
+# Set DJANGO_SECRET_KEY, FIELD_ENCRYPTION_KEY, CRON_SECRET, DEBUG=0, SECURE_SSL_REDIRECT=1,
+# SECURE_PROXY_SSL_HEADER=1 in the service Variables. To use Celery instead add a Redis plugin,
+# set CELERY_BROKER_URL, SCHEDULER_MODE=celery and a second service running the Procfile `worker` line.
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+startCommand = "bash deployment/start-single.sh"
+healthcheckPath = "/health/"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10

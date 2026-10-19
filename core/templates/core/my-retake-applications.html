@@ -1,0 +1,34 @@
+{% extends "core/base.html" %}
+{% block title %}My Retake / Improvement Applications{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>📋 My Retake / Improvement Applications</h2>
+  <a class="btn ghost" href="{% url 'result-checker' %}">Back to Results</a>
+</div>
+<div class="panel">
+<table class="table">
+  <thead><tr><th>Course</th><th>Type</th><th>Status</th><th>Eligibility</th><th>Applied</th></tr></thead>
+  <tbody>
+    {% for a in applications %}
+    <tr>
+      <td>{{ a.grade_entry.exam.course.code }} — {{ a.grade_entry.exam.course.name }}</td>
+      <td>{{ a.get_application_type_display }}</td>
+      <td><span class="badge badge-{{ a.status }}">{{ a.get_status_display }}</span>
+        {% if a.status == 'approved' %}<a class="btn ghost" style="margin-left:6px" href="{% url 'retake-slip' a.pk %}">🎫 Slip</a>{% endif %}
+      </td>
+      <td>
+        {{ a.exam_eligibility_status }}
+        {% if a.linked_invoice and not a.linked_invoice.paid %}
+          <a class="btn ghost" style="margin-left:6px" href="{% url 'pay-now' a.linked_invoice.pk %}">Pay Now</a>
+        {% endif %}
+      </td>
+      <td>{{ a.applied_at|date:"M d, Y" }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="5" class="empty-row">No retake/improvement applications yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+<p class="ai-hint" style="margin-top:10px">Once approved, a fee challan is generated automatically — check <a href="{% url 'fees-list' %}">Fees &amp; Challans</a> to pay it.</p>
+{% endblock %}

@@ -1,0 +1,121 @@
+# University Management System - local/self-hosted stack.
+#
+# Quick start:
+#   cp .env.example .env
+#   # edit .env: set a real DJANGO_SECRET_KEY, set DB_ENGINE=postgresql,
+#   # and set POSTGRES_HOST=db (the service name below, not localhost)
+#   docker compose up --build
+#
+# The app will be at http://localhost (nginx on port 80 -> gunicorn -> Django)
+#
+# This is a local/self-hosted compose file, not a Kubernetes/cloud
+# manifest - for a real production deployment behind a domain, put a
+# reverse proxy (nginx/Caddy/Traefik) in front of this for HTTPS.
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-ums}
+      POSTGRES_USER: ${POSTGRES_USER:-umsuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-umsuser}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  web:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DB_ENGINE: postgresql
+      POSTGRES_HOST: db
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      SCHEDULER_MODE: celery
+      MEDIA_ACCEL_PREFIX: /_protected_media/
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      # /ready/ checks the database, so "healthy" means Web -> PostgreSQL works.
+      test: ["CMD", "python", "deployment/healthcheck.py"]
+      interval: 10s
+      timeout: 6s
+      retries: 12
+      start_period: 40s
+    expose:
+      - "8000"
+    volumes:
+      - media_data:/app/media
+      - static_data:/app/staticfiles
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    depends_on:
+      web:
+        condition: service_healthy
+    ports:
+      - "80:80"
+    volumes:
+      - ./deployment/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - static_data:/app/staticfiles:ro
+      - media_data:/app/media:ro   # served only via internal /_protected_media/ after Django authorises
+
+  worker:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DB_ENGINE: postgresql
+      POSTGRES_HOST: db
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      SCHEDULER_MODE: celery
+      RUN_MIGRATIONS: "0"
+    depends_on:
+      web:
+        condition: service_healthy
+    command: ["celery", "-A", "ums_project", "worker", "--loglevel=info"]
+
+  beat:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DB_ENGINE: postgresql
+      POSTGRES_HOST: db
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      SCHEDULER_MODE: celery
+      RUN_MIGRATIONS: "0"
+    depends_on:
+      web:
+        condition: service_healthy
+    command: ["celery", "-A", "ums_project", "beat", "--loglevel=info"]
+
+volumes:
+  postgres_data:
+  media_data:
+  static_data:
+  redis_data:

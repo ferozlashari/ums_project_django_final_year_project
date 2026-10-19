@@ -1,0 +1,28 @@
+{% extends "core/base.html" %}
+{% block title %}Security & Policy Center{% endblock %}
+{% block content %}
+<div class="page-head"><h2>🛡️ Security &amp; Policy Center</h2></div>
+<p class="muted">System Administrator only. Create restricted sub-administrators, choose exactly which module and action each may use, and manage versioned policies.</p>
+<div class="panel" style="display:flex;gap:24px;flex-wrap:wrap">
+  <div><strong>{{ role_count }}</strong><br><span class="muted">Roles</span></div>
+  <div><strong>{{ assignment_count }}</strong><br><span class="muted">Active assignments</span></div>
+  <div><strong>{{ policy_count }}</strong><br><span class="muted">Policy rules</span></div>
+</div>
+<div class="panel">
+  <a class="btn" href="{% url 'subadmin-create' %}">➕ Create sub-admin account</a>
+  <a class="btn ghost" href="{% url 'role-list' %}">Roles &amp; permission matrix</a>
+  <a class="btn ghost" href="{% url 'role-assignments' %}">Role assignments</a>
+  <a class="btn ghost" href="{% url 'policy-center' %}">Policy Center</a>
+  <a class="btn ghost" href="{% url 'governance-map' %}">Governance Map</a>
+  <a class="btn ghost" href="{% url 'emergency-access' %}">Emergency Access</a>
+  <a class="btn ghost" href="{% url 'permission-matrix' %}">Permission Matrix &amp; SoD</a>
+  <a class="btn ghost" href="{% url 'executive-dashboard' %}">Executive Dashboard</a>
+  <a class="btn ghost" href="{% url 'grade-scale' %}">Grade Scale</a>
+  <a class="btn ghost" href="{% url 'audit-log' %}">Audit Log</a>
+</div>
+<div class="panel"><h3>Recent assignments</h3>
+<table class="table"><thead><tr><th>User</th><th>Role</th><th>Scope</th><th>Expires</th></tr></thead><tbody>
+{% for a in recent %}<tr><td>{{ a.user.username }}</td><td>{{ a.role }}</td><td>{{ a.get_scope_type_display }}{% if a.scope_id %} #{{ a.scope_id }}{% endif %}</td><td>{{ a.end_date|default_if_none:"never" }}</td></tr>
+{% empty %}<tr><td colspan="4" class="muted">No assignments yet.</td></tr>{% endfor %}
+</tbody></table></div>
+{% endblock %}

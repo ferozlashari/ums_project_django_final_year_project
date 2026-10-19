@@ -1,0 +1,19 @@
+{% extends "core/base.html" %}
+{% block title %}Login{% endblock %}
+{% block content %}
+<div class="auth-card">
+  <h2>Login</h2>
+  <p class="muted" style="margin-top:-8px">Students: sign in with your <strong>username</strong> or your <strong>CNIC / admission (roll) number</strong> — without dashes, e.g. 4210112345671.</p>
+  <form method="post">{% csrf_token %}
+    {{ form.as_p }}
+    <p style="text-align:right;margin-top:-8px"><a href="{% url 'password_reset' %}">Forgot password?</a></p>
+    <div class="form-actions">
+      <button class="btn" type="submit">Login</button>
+      <a class="btn ghost" href="{% url 'register' %}">Create account</a>
+    </div>
+  </form>
+  <p class="muted" style="text-align:center;margin-top:14px;font-size:.82rem">
+    <a href="{% url 'verify-challan' %}">🧾 Verify a fee challan payment</a> — no login needed
+  </p>
+</div>
+{% endblock %}

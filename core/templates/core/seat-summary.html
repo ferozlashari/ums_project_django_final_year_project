@@ -1,0 +1,30 @@
+{% extends "core/base.html" %}
+{% block title %}Admission Seat Summary{% endblock %}
+{% block content %}
+<div class="page-head"><h2>🎯 Admission Seat Summary</h2></div>
+<p class="muted" style="margin-top:-8px">Open merit and district-quota seats, per program, for the current admission cycle. Filled counts are accepted applications only.</p>
+
+<div class="panel">
+<table class="table">
+  <thead><tr><th>Program</th><th>Open Merit</th><th>District Quota</th><th>Total Seats</th></tr></thead>
+  <tbody>
+    {% for row in rows %}
+    <tr>
+      <td>{{ row.program.name }}</td>
+      <td>
+        {{ row.open_merit_filled }} / {{ row.open_merit_total }}
+        {% if row.open_merit_remaining <= 0 %}<span class="badge badge-unavailable">Full</span>{% else %}<span class="badge badge-available">{{ row.open_merit_remaining }} open</span>{% endif %}
+      </td>
+      <td>
+        {{ row.district_quota_filled }} / {{ row.district_quota_total }}
+        {% if row.district_quota_remaining <= 0 %}<span class="badge badge-unavailable">Full</span>{% else %}<span class="badge badge-available">{{ row.district_quota_remaining }} open</span>{% endif %}
+      </td>
+      <td>{{ row.total_seats }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="4" class="empty-row">No programs configured yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

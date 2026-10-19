@@ -1,0 +1,43 @@
+{% extends "core/base.html" %}
+{% block title %}Audit Log{% endblock %}
+{% block content %}
+<div class="page-head"><h2>🔍 Audit Log</h2></div>
+<p class="muted" style="margin-top:-8px">Sensitive actions across the system - who did what, when, and what changed. Read-only; entries cannot be edited or deleted from anywhere in the application.</p>
+
+<form method="get" class="panel" style="display:flex;gap:10px;align-items:end;margin-bottom:16px">
+  <div>
+    <label>Action type</label><br>
+    <select name="action" onchange="this.form.submit()">
+      <option value="">All actions</option>
+      {% for a in actions %}
+      <option value="{{ a }}" {% if action_filter == a %}selected{% endif %}>{{ a }}</option>
+      {% endfor %}
+    </select>
+  </div>
+</form>
+
+<div class="panel">
+<table class="table">
+  <thead><tr><th>When</th><th>Who</th><th>Action</th><th>Record</th><th>Changes</th><th>IP</th></tr></thead>
+  <tbody>
+    {% for e in entries %}
+    <tr>
+      <td>{{ e.created_at|date:"Y-m-d H:i" }}</td>
+      <td>{{ e.actor|default:"system" }}</td>
+      <td><span class="badge badge-pending">{{ e.action }}</span></td>
+      <td>{{ e.object_repr|default:"—" }}</td>
+      <td style="font-size:.8rem">
+        {% for field, vals in e.changes.items %}
+          <div>{{ field }}: {{ vals.0 }} → {{ vals.1 }}</div>
+        {% empty %}—{% endfor %}
+      </td>
+      <td class="muted" style="font-size:.8rem">{{ e.ip_address|default:"—" }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="6" class="empty-row">No audit entries yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+<p class="muted" style="font-size:.8rem;margin-top:8px">Showing the most recent 200 entries.</p>
+</div>
+{% endblock %}

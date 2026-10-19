@@ -1,0 +1,16 @@
+{% if window %}
+<div class="panel" style="margin-bottom:16px;border-left:4px solid {% if window.state == 'open' %}var(--success){% elif window.state == 'not_open' %}var(--warn){% else %}var(--danger){% endif %}">
+  <strong>Course selection for {{ viewing_semester.display_name }}:</strong>
+  {% if window.state == 'open' %}
+    <span class="badge badge-success">Open</span>
+    {% if window.closes %}— closes {{ window.closes|date:"d M Y, H:i" }}.{% else %}— no closing date has been set yet.{% endif %}
+  {% elif window.state == 'not_open' %}
+    <span class="badge badge-warning">Not open yet</span> — opens {{ window.opens|date:"d M Y, H:i" }}.
+  {% else %}
+    <span class="badge badge-danger">Closed</span> — closed {{ window.closes|date:"d M Y, H:i" }}. You can no longer register for new courses this semester.
+  {% endif %}
+  <br>
+  <span class="muted">Drop deadline:</span> {{ window.drop_deadline|date:"d M Y, H:i" }}
+  {% if window.drop_state == 'closed' %}<span class="badge badge-danger">Passed</span>{% else %}<span class="badge badge-success">Open</span>{% endif %}
+</div>
+{% endif %}

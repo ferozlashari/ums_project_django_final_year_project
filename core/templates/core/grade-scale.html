@@ -1,0 +1,24 @@
+{% extends "core/base.html" %}
+{% block title %}Grade Scale{% endblock %}
+{% block content %}
+<div class="page-head"><h2>🎓 Grade Scale</h2></div>
+<p class="muted">Teachers enter raw marks only. Percentage, letter grade, grade point, pass/fail, GPA and CGPA are calculated from this scale, using the scale in effect on the exam's date. Only an administrator with <em>grade_policy.configure</em> can change it, and every change is audited.</p>
+{% if can_configure %}<form method="post">{% csrf_token %}
+<div class="panel" style="display:flex;gap:12px;flex-wrap:wrap">
+  <div><label>Scale name</label><br><input name="name" value="Grade scale {{ today|date:'Y' }}"></div>
+  <div><label>Effective from</label><br><input type="date" name="effective_from" value="{{ today|date:'Y-m-d' }}"></div>
+</div>{% endif %}
+<div class="panel"><table class="table"><thead><tr><th>Grade</th><th>Minimum %</th><th>Grade point</th><th>Pass?</th><th>Improvement allowed?</th></tr></thead><tbody>
+{% for r in rows %}<tr>
+{% if can_configure %}
+<td><input name="grade_{{ r.i }}" value="{{ r.b.grade }}" size="4"></td><td><input name="min_{{ r.i }}" value="{{ r.b.min_percent }}" size="6"></td>
+<td><input name="gp_{{ r.i }}" value="{{ r.b.grade_point }}" size="5"></td>
+<td><input type="checkbox" name="pass_{{ r.i }}" {% if r.b.is_pass %}checked{% endif %}></td>
+<td><input type="checkbox" name="improve_{{ r.i }}" {% if r.b.allows_improvement %}checked{% endif %}></td>
+{% else %}<td><strong>{{ r.b.grade }}</strong></td><td>{{ r.b.min_percent }}</td><td>{{ r.b.grade_point }}</td><td>{{ r.b.is_pass|yesno:"Pass,Fail" }}</td><td>{{ r.b.allows_improvement|yesno:"Yes,No" }}</td>{% endif %}
+</tr>{% endfor %}
+{% if can_configure %}{% for i in blank %}<tr><td><input name="grade_{{ i }}" size="4"></td><td><input name="min_{{ i }}" size="6"></td><td><input name="gp_{{ i }}" size="5"></td><td><input type="checkbox" name="pass_{{ i }}"></td><td><input type="checkbox" name="improve_{{ i }}"></td></tr>{% endfor %}{% endif %}
+</tbody></table></div>
+{% if can_configure %}<button class="btn" type="submit">Save as new scale version</button></form>{% endif %}
+<div class="panel"><h3>Scale history</h3><ul>{% for h in history %}<li>{{ h.name }} - from {{ h.effective_from }}{% if h.effective_until %} to {{ h.effective_until }}{% endif %}{% if not h.is_active %} (superseded){% endif %}</li>{% empty %}<li class="muted">Using the built-in default scale (A+ to F). Save a scale above to customise it.</li>{% endfor %}</ul></div>
+{% endblock %}

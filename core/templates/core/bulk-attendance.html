@@ -1,0 +1,59 @@
+{% extends "core/base.html" %}
+{% block title %}Bulk Attendance{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>✅ Take Attendance - Whole Section</h2>
+  <a class="btn ghost" href="{% url 'attendance-list' %}">Attendance Log</a>
+</div>
+<p class="muted" style="margin-top:-8px">Pick a section and date - the registered roster loads automatically. Present is checked by default; untick anyone absent, then save once for the whole class.</p>
+
+<form method="get" class="panel" style="display:flex;gap:10px;align-items:end;margin-bottom:16px;flex-wrap:wrap">
+  <div>
+    <label>Section</label><br>
+    <select name="section" onchange="this.form.submit()">
+      <option value="">Select a section...</option>
+      {% for s in sections %}
+        <option value="{{ s.pk }}" {% if section.pk == s.pk %}selected{% endif %}>{{ s.course.code }} - {{ s }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div>
+    <label>Date</label><br>
+    <input type="date" name="date" value="{{ selected_date }}" max="{{ max_date }}" onchange="this.form.submit()">
+  </div>
+  <noscript><button class="btn ghost" type="submit">Load Roster</button></noscript>
+</form>
+
+{% if section %}
+  {% if roster %}
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="section" value="{{ section.pk }}">
+    {% if date_problem %}<div class="panel" style="border-left:4px solid var(--danger);margin-bottom:12px">⚠️ {{ date_problem }} Saving is disabled for this date.</div>{% endif %}
+    <input type="hidden" name="date" value="{{ selected_date }}">
+    <div class="panel">
+      <h3 style="margin-top:0">{{ section.course.code }} - {{ section.course.name }} ({{ section }}) - {{ selected_date }}</h3>
+      <table class="table">
+        <thead><tr><th>Student</th><th>Admission No.</th><th style="text-align:center">Present</th></tr></thead>
+        <tbody>
+          {% for row in roster %}
+          <tr>
+            <td>{{ row.registration.student.full_name }}</td>
+            <td>{{ row.registration.student.admission_no }}</td>
+            <td style="text-align:center">
+              <input type="checkbox" name="present_{{ row.registration.student_id }}" style="width:20px;height:20px" {% if row.checked %}checked{% endif %}>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="form-actions" style="margin-top:12px">
+      <button class="btn" type="submit">Save Attendance for {{ roster|length }} Student{{ roster|length|pluralize }}</button>
+    </div>
+  </form>
+  {% else %}
+  <p class="muted">No students are registered in this section yet.</p>
+  {% endif %}
+{% endif %}
+{% endblock %}

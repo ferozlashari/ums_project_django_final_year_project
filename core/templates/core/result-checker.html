@@ -1,0 +1,109 @@
+{% extends "core/base.html" %}
+{% block title %}Check Result{% endblock %}
+{% block content %}
+<div class="page-head"><h2>Check Result by Roll Number</h2></div>
+
+<div class="panel" style="max-width:640px;margin:0 auto 20px">
+  <form method="get">
+    {% if role != 'student' %}
+    <label>Admission / Roll Number</label>
+    <input type="text" name="admission_no" value="{{ admission_no }}" placeholder="e.g. UMS-2024-0001" required style="width:100%;padding:9px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);margin-bottom:10px">
+    {% endif %}
+    <label>Semester (optional)</label>
+    <select name="semester" style="width:100%;padding:9px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);margin-bottom:10px">
+      <option value="">All semesters</option>
+      {% for s in semesters %}
+        <option value="{{ s.id }}" {% if selected_semester == s.id|stringformat:"s" %}selected{% endif %}>{{ s }}{% if s.semester_number %} (Semester {{ s.semester_number }} - {{ s.term_type }}){% endif %}</option>
+      {% endfor %}
+    </select>
+    <label>Exam Type (optional)</label>
+    <select name="attempt_type" style="width:100%;padding:9px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);margin-bottom:10px">
+      <option value="">All types</option>
+      <option value="regular" {% if attempt_type == 'regular' %}selected{% endif %}>Regular</option>
+      <option value="improvement" {% if attempt_type == 'improvement' %}selected{% endif %}>Improvement</option>
+      <option value="retake" {% if attempt_type == 'retake' %}selected{% endif %}>Retake</option>
+    </select>
+    <label>Result (optional)</label>
+    <select name="status" style="width:100%;padding:9px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);margin-bottom:10px">
+      <option value="">Pass and Fail</option>
+      <option value="pass" {% if status_filter == 'pass' %}selected{% endif %}>Pass only</option>
+      <option value="fail" {% if status_filter == 'fail' %}selected{% endif %}>Fail only</option>
+    </select>
+    <button class="btn" type="submit">Check Result</button>
+  </form>
+</div>
+
+{% if searched %}
+  {% if not student %}
+    <div class="msg error" style="max-width:640px;margin:0 auto">No student found with that admission/roll number.</div>
+  {% else %}
+    <div class="panel" style="margin-bottom:8px">
+        <div class="page-head" style="margin-bottom:8px">
+          <h3 style="margin:0">{{ student.full_name }} — {{ student.admission_no }}</h3>
+          {% if overall_status %}<span class="badge badge-{{ overall_status }}">{{ overall_status|upper }}</span>{% endif %}
+        </div>
+        <div style="display:flex;gap:24px;flex-wrap:wrap">
+          <div><div class="muted" style="font-size:.78rem;text-transform:uppercase">CGPA</div><div style="font-size:1.3rem;font-weight:700">{{ cgpa|default_if_none:"—" }}</div></div>
+          <div><div class="muted" style="font-size:.78rem;text-transform:uppercase">Academic Status</div><div style="font-size:1.05rem;font-weight:600">{{ academic_standing|default:"—" }}</div></div>
+          {% if role == 'student' %}
+          <div><div class="muted" style="font-size:.78rem;text-transform:uppercase">Retake Opportunities</div><div style="font-size:1.05rem;font-weight:600">{{ retake_count }} course{{ retake_count|pluralize }}</div></div>
+          <div><div class="muted" style="font-size:.78rem;text-transform:uppercase">Improvement Opportunities</div><div style="font-size:1.05rem;font-weight:600">{{ improvement_count }} course{{ improvement_count|pluralize }}</div></div>
+          {% endif %}
+        </div>
+    </div>
+
+    {% for group in semester_groups %}
+    <div class="panel" style="max-width:720px;margin:0 auto 14px">
+      <div class="page-head" style="margin-bottom:6px">
+        <h4 style="margin:0">{{ group.semester|default:"Unassigned Semester" }}</h4>
+        <span class="muted">Semester GPA: <strong>{{ group.gpa|default_if_none:"—" }}</strong></span>
+      </div>
+      <table class="table">
+        <thead><tr><th>Course</th><th>Components</th><th>Marks</th><th>%</th><th>Grade</th><th>Attempt</th><th>Result</th>{% if role == 'student' %}<th></th>{% endif %}</tr></thead>
+        <tbody>
+          {% for g in group.grades %}
+          <tr>
+            <td>{{ g.exam.course.code }}</td>
+            <td style="font-size:.82rem;white-space:nowrap">
+              {% if g.attendance_marks is not None or g.assignment_marks is not None or g.midterm_marks is not None or g.final_marks is not None %}
+                {% if g.attendance_marks is not None %}Attendance: {{ g.attendance_marks }}/{{ g.exam.course.attendance_weight }}<br>{% endif %}
+                {% if g.assignment_marks is not None %}Assignment: {{ g.assignment_marks }}/{{ g.exam.course.assignment_weight }}<br>{% endif %}
+                {% if g.midterm_marks is not None %}Midterm: {{ g.midterm_marks }}/{{ g.exam.course.midterm_weight }}<br>{% endif %}
+                {% if g.final_marks is not None %}Final: {{ g.final_marks }}/{{ g.exam.course.final_weight }}{% endif %}
+              {% else %}
+                <span class="muted">—</span>
+              {% endif %}
+            </td>
+            <td>{{ g.marks }} / {{ g.exam.max_marks }}</td>
+            <td>{{ g.percentage }}%</td>
+            <td><strong>{{ g.letter_grade }}</strong></td>
+            <td><span class="badge badge-{{ g.attempt_type }}">{{ g.get_attempt_type_display }}</span></td>
+            <td><span class="badge badge-{{ g.status }}">{{ g.result_label }}</span></td>
+            {% if role == 'student' %}
+            <td>
+              {% if g.id in applied_grade_ids %}
+                <span class="badge badge-pending">Applied</span>
+              {% elif g.can_apply_retake %}
+                <a class="btn ghost" href="{% url 'apply-retake' g.id %}">Apply for Retake…</a>
+              {% elif g.can_apply_improvement %}
+                <a class="btn ghost" href="{% url 'apply-retake' g.id %}">Apply for Improvement…</a>
+              {% else %}
+                <span class="muted" style="font-size:.78rem">—</span>
+              {% endif %}
+            </td>
+            {% endif %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% empty %}
+    <div class="panel empty-row" style="max-width:720px;margin:0 auto">No results found for this student yet.</div>
+    {% endfor %}
+    <div style="max-width:720px;margin:0 auto">
+      {% if role == 'student' %}<a class="btn ghost" style="margin-top:8px" href="{% url 'my-retake-applications' %}">📋 My Retake/Improvement Applications</a>{% endif %}
+      {% if student %}<a class="btn ghost" style="margin-top:12px" href="{% url 'marksheet' student.id %}">📄 View Full Marksheet</a>{% endif %}
+    </div>
+  {% endif %}
+{% endif %}
+{% endblock %}

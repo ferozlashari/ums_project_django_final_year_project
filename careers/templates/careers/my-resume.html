@@ -1,0 +1,19 @@
+{% extends "core/base.html" %}
+{% block title %}My Resume{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>📄 My Resume</h2>
+  <button class="btn ghost" onclick="window.print()">🖨️ Print / Save as PDF</button>
+</div>
+<div class="panel" style="max-width:720px">
+  <p class="muted" style="margin-top:0">Keep this updated - the AI assistant uses it to suggest job matches, and employers see it when reviewing your applications.</p>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <div class="form-actions">
+      <button class="btn" type="submit">Save Resume</button>
+      <a class="btn ghost" href="{% url 'job-list' %}">Back</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

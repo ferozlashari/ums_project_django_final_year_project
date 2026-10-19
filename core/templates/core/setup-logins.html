@@ -1,0 +1,13 @@
+{% extends "core/base.html" %}
+{% block title %}Logins and roles{% endblock %}
+{% block content %}
+<div class="page-head"><h2>🔑 Logins and roles</h2>
+  <div><a class="btn ghost" href="{% url 'setup-hub' %}">← Data Entry Hub</a>{% if can_add %}<a class="btn" href="{% url 'setup-login-add' %}">+ Create login</a>{% endif %}</div></div>
+<p class="muted" style="margin-top:-6px">A teacher's login needs the <b>Faculty</b> role, office accounts <b>Staff</b>. Adding a Teacher record sets this automatically; use Change role for anything else. Administrators are managed in the Django admin.</p>
+<div class="panel"><table class="table"><thead><tr><th>Username</th><th>Name</th><th>Email</th><th>Role</th><th>Active</th><th></th></tr></thead><tbody>
+{% for u in users %}<tr><td>{{ u.username }}</td><td>{{ u.get_full_name|default:"-" }}</td><td>{{ u.email|default:"-" }}</td>
+  <td>{{ u.profile.role|default:"-" }}{% if u.is_superuser %} (administrator){% endif %}</td>
+  <td>{% if u.has_usable_password and u.is_active %}Yes{% else %}<span class="muted">no password set</span>{% endif %}</td>
+  <td>{% if can_edit and not u.is_superuser %}<a class="btn ghost" href="{% url 'setup-login-role' u.pk %}">Change role</a>{% endif %}</td></tr>
+{% empty %}<tr><td colspan="6" class="muted">No logins.</td></tr>{% endfor %}</tbody></table></div>
+{% endblock %}

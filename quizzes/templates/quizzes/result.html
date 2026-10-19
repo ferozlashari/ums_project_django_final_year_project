@@ -1,0 +1,21 @@
+{% extends "core/base.html" %}
+{% block title %}Result — {{ quiz.title }}{% endblock %}
+{% block content %}
+<div class="page-head"><h2>{{ quiz.title }} — Result</h2><a class="btn ghost" href="{% url 'quiz-list' %}">← Back</a></div>
+<div class="panel" style="margin-bottom:16px;text-align:center">
+  <p style="font-size:2rem;font-weight:800;margin:6px 0">{{ attempt.score }} / {{ quiz.total_marks }}</p>
+  <p class="muted">{{ attempt.percentage }}%</p>
+</div>
+{% for a in answers %}
+<div class="panel" style="margin-bottom:10px;{% if a.is_correct %}border-left:4px solid #16a34a{% else %}border-left:4px solid #dc2626{% endif %}">
+  <strong>{{ a.question.text }}</strong>
+  <p class="muted" style="margin:4px 0 0">Your answer: {{ a.get_selected_choice_display }} -
+    {% if a.selected_choice == 'a' %}{{ a.question.choice_a }}
+    {% elif a.selected_choice == 'b' %}{{ a.question.choice_b }}
+    {% elif a.selected_choice == 'c' %}{{ a.question.choice_c }}
+    {% else %}{{ a.question.choice_d }}{% endif %}
+    {% if not a.is_correct %}<br>Correct answer: {{ a.question.get_correct_choice_display }}{% endif %}
+  </p>
+</div>
+{% endfor %}
+{% endblock %}

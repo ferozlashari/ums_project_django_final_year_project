@@ -1,0 +1,41 @@
+{% extends "core/base.html" %}
+{% block title %}Attendance - all classes{% endblock %}
+{% block content %}
+<div class="page-head"><h2>📊 Attendance — all classes</h2>
+  <div><a class="btn ghost" href="{% url 'teacher-automation' %}">← Teacher Automation</a>
+  <a class="btn" href="{% url 'teacher-attendance-today' %}">Take today's attendance</a></div></div>
+{% if not semester %}<div class="panel" style="border-left:4px solid #d97706">No semester selected or active. Choose a semester below.</div>{% endif %}
+
+<form method="get" class="panel" style="display:flex;flex-wrap:wrap;gap:10px;align-items:end">
+  <label>Semester<br><select name="semester">{% for s in semesters %}<option value="{{ s.pk }}" {% if f.semester == s.pk %}selected{% endif %}>{{ s.name }}</option>{% endfor %}</select></label>
+  <label>Subject<br><select name="course"><option value="">All subjects</option>{% for c in subjects %}<option value="{{ c.pk }}" {% if f.course|stringformat:"s" == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.code }} — {{ c.name }}</option>{% endfor %}</select></label>
+  <label>Class<br><select name="section"><option value="">All classes</option>{% for s in sections %}<option value="{{ s.pk }}" {% if f.section|stringformat:"s" == s.pk|stringformat:"s" %}selected{% endif %}>{{ s.course.code }} / {{ s.code }}</option>{% endfor %}</select></label>
+  {% if teachers %}<label>Teacher<br><select name="teacher"><option value="">All teachers</option>{% for t in teachers %}<option value="{{ t.pk }}" {% if f.teacher|stringformat:"s" == t.pk|stringformat:"s" %}selected{% endif %}>{{ t.user.get_full_name|default:t.user.username }}</option>{% endfor %}</select></label>{% endif %}
+  <label>From<br><input type="date" name="from" value="{{ f.from }}"></label>
+  <label>To<br><input type="date" name="to" value="{{ f.to }}"></label>
+  <label>Student<br><input type="search" name="q" value="{{ f.q }}" placeholder="name or admission no."></label>
+  <label style="display:flex;gap:6px;align-items:center"><input type="checkbox" name="below" value="1" {% if f.below %}checked{% endif %}> Below {{ minimum|floatformat:"-1" }}% only</label>
+  <button class="btn" type="submit">Apply filters</button>
+  <a class="btn ghost" href="{% url 'teacher-attendance-summary' %}">Reset</a>
+</form>
+
+<div class="stat-grid">
+  <div class="stat-card"><span class="stat-value">{{ totals.classes|default:0 }}</span><span class="stat-label">Classes</span></div>
+  <div class="stat-card"><span class="stat-value">{{ totals.students|default:0 }}</span><span class="stat-label">Students</span></div>
+  <div class="stat-card"><span class="stat-value">{% if totals.avg is not None %}{{ totals.avg }}%{% else %}—{% endif %}</span><span class="stat-label">Overall attendance</span></div>
+  <div class="stat-card {% if totals.low %}stat-card-warn{% endif %}"><span class="stat-value">{{ totals.low|default:0 }}</span><span class="stat-label">Below {{ minimum|floatformat:"-1" }}%</span></div>
+</div>
+
+{% for b in blocks %}
+<details class="panel" style="margin-top:12px" {% if blocks|length == 1 or b.low_count %}open{% endif %}>
+  <summary style="cursor:pointer"><strong>{{ b.section.course.code }} — {{ b.section.course.name }}</strong> (Sec {{ b.section.code|default:"—" }})
+    <span class="muted"> · {{ b.sessions }} session{{ b.sessions|pluralize }} · {{ b.students }} students ·
+    {% if b.avg is not None %}average {{ b.avg }}%{% else %}no attendance yet{% endif %}{% if b.low_count %} · <span style="color:var(--warn);font-weight:600">{{ b.low_count }} below minimum</span>{% endif %}</span></summary>
+  <table class="table" style="margin-top:8px"><thead><tr><th>Student</th><th>Admission no.</th><th>Present</th><th>Absent</th><th>Total</th><th>%</th></tr></thead><tbody>
+  {% for r in b.rows %}<tr {% if r.low %}style="background:rgba(217,119,6,.08)"{% endif %}><td>{{ r.student.full_name }}</td><td>{{ r.student.admission_no }}</td><td>{{ r.present }}</td><td>{{ r.absent }}</td><td>{{ r.total }}</td>
+    <td>{% if r.pct is not None %}<strong {% if r.low %}style="color:var(--warn)"{% endif %}>{{ r.pct }}%</strong>{% else %}<span class="muted">—</span>{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="6" class="muted">No students match the filters.</td></tr>{% endfor %}
+  </tbody></table>
+</details>
+{% empty %}<div class="panel muted" style="margin-top:12px">No classes match these filters.</div>{% endfor %}
+{% endblock %}

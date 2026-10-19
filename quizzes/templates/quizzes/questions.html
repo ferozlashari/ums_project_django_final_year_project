@@ -1,0 +1,31 @@
+{% extends "core/base.html" %}
+{% block title %}Questions — {{ quiz.title }}{% endblock %}
+{% block content %}
+<div class="page-head"><h2>Questions — {{ quiz.title }}</h2><a class="btn ghost" href="{% url 'quiz-list' %}">← Back</a></div>
+
+<div class="panel" style="max-width:640px;margin-bottom:20px">
+  <h3 style="margin-top:0">Add Question</h3>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button class="btn" type="submit">Add Question</button>
+  </form>
+</div>
+
+<div class="panel">
+  <h3 style="margin-top:0">Questions ({{ questions.count }})</h3>
+  {% for q in questions %}
+  <div style="padding:10px 0;border-bottom:1px solid var(--border)">
+    <strong>{{ forloop.counter }}. {{ q.text }}</strong>
+    <p class="muted" style="margin:4px 0 0">
+      A) {{ q.choice_a }} &nbsp; B) {{ q.choice_b }}
+      {% if q.choice_c %}&nbsp; C) {{ q.choice_c }}{% endif %}
+      {% if q.choice_d %}&nbsp; D) {{ q.choice_d }}{% endif %}
+      &nbsp; — Correct: {{ q.get_correct_choice_display }}
+    </p>
+  </div>
+  {% empty %}
+  <p class="empty-row">No questions yet.</p>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,19 @@
+{% extends "core/base.html" %}
+{% block title %}Verify Your Email{% endblock %}
+{% block content %}
+<div class="auth-card" style="text-align:center">
+  <div style="font-size:2.5rem">📧</div>
+  <h2>Check your email</h2>
+  <p>We sent a 6-digit code and a verification link to <strong>{{ email }}</strong>. Type the code below <em>or</em> click the link in the email - either activates your account.</p>
+  {% if error %}<p class="muted" style="color:var(--danger,#b00020)">{{ error }}</p>{% endif %}
+  <a class="btn" href="{% url 'verify-email-code' %}">🔢 Enter my code</a>
+  {% if dev_verify_url %}
+    <div class="panel" style="text-align:left;background:var(--warn-bg);border-color:var(--warn);margin:16px 0">
+      <p style="margin-top:0"><strong>Test mode</strong> — email delivery is switched off on this computer, so the message is shown here:</p>
+      {% if dev_code %}<p>Code: <strong style="font-size:1.4rem;letter-spacing:4px">{{ dev_code }}</strong></p>{% endif %}
+      <p style="word-break:break-all">Link: <a href="{{ dev_verify_url }}">{{ dev_verify_url }}</a></p>
+    </div>
+  {% else %}<p class="muted">Didn't get it? Check spam, or resend from the next page.</p>{% endif %}
+  <a class="btn ghost" href="{% url 'login' %}">Back to Login</a>
+</div>
+{% endblock %}

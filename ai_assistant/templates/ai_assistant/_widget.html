@@ -1,0 +1,33 @@
+{% load static %}
+<div id="ai-widget" class="ai-widget" data-send-url="{% url 'ai-chat-send' %}">
+  <button type="button" id="ai-widget-toggle" class="ai-widget-toggle" aria-label="Open AI assistant" title="Ask UMS Assistant">
+    <span class="ai-widget-icon">🤖</span>
+  </button>
+
+  <div id="ai-widget-panel" class="ai-widget-panel" hidden>
+    <div class="ai-widget-header">
+      <span>🤖 UMS Assistant</span>
+      <div class="ai-widget-header-actions">
+        <select class="ai-lang-select" data-lang-select title="Voice language">
+          <option value="en-US">EN</option>
+          <option value="ur-PK">اردو</option>
+          <option value="sd">سنڌي</option>
+        </select>
+        <button type="button" class="ai-widget-speaker" data-speaker-toggle title="Read replies aloud">🔇</button>
+        <a href="{% url 'ai-chat' %}" class="ai-widget-expand" title="Open full chat">⤢</a>
+        <button type="button" id="ai-widget-close" class="ai-widget-close" aria-label="Close">✕</button>
+      </div>
+    </div>
+    <div id="ai-widget-messages" class="ai-widget-messages">
+      <div class="ai-bubble ai-bubble-assistant">
+        <div class="ai-text">Hi! Ask me about notices, your attendance, fees, grades, or general UMS help. Tap 🎤 to ask by voice.</div>
+      </div>
+    </div>
+    <form id="ai-widget-form" class="ai-input-row" autocomplete="off">
+      <button type="button" class="ai-mic-btn" data-mic-btn title="Ask by voice">🎤</button>
+      <input type="text" id="ai-widget-input" maxlength="2000" placeholder="Ask something…" required />
+      <button class="btn" type="submit">➤</button>
+    </form>
+  </div>
+</div>
+<script src="{% static 'js/ai_chat.js' %}" defer></script>

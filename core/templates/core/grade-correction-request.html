@@ -1,0 +1,16 @@
+{% extends "core/base.html" %}
+{% block title %}Request grade correction{% endblock %}
+{% block content %}
+<div class="page-head"><h2>Request grade correction</h2></div>
+<div class="panel"><p><strong>{{ grade.student }}</strong> - {{ grade.exam }}<br>
+Current: {{ grade.marks }} / {{ grade.exam.max_marks }} ({{ grade.percentage }}%) - grade <strong>{{ grade.letter_grade }}</strong></p>
+<p class="muted">This result is locked, so it cannot be edited directly. Enter the corrected component marks and a reason. Nothing changes until an authorised officer approves; the old value is preserved and the change is audited.</p></div>
+<form method="post" class="panel">{% csrf_token %}
+<p><label>Attendance (max {{ course.attendance_weight }})</label><br><input name="attendance_marks" value="{{ grade.attendance_marks|default_if_none:'' }}"></p>
+<p><label>Assignment (max {{ course.assignment_weight }})</label><br><input name="assignment_marks" value="{{ grade.assignment_marks|default_if_none:'' }}"></p>
+<p><label>Midterm (max {{ course.midterm_weight }})</label><br><input name="midterm_marks" value="{{ grade.midterm_marks|default_if_none:'' }}"></p>
+<p><label>Final (max {{ course.final_weight }})</label><br><input name="final_marks" value="{{ grade.final_marks|default_if_none:'' }}"></p>
+<p><label>Reason / supporting evidence</label><br><textarea name="reason" rows="4" cols="60"></textarea></p>
+<button class="btn" type="submit">Submit request</button> <a class="btn ghost" href="{% url 'results' %}">Cancel</a>
+</form>
+{% endblock %}

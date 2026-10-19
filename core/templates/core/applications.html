@@ -1,0 +1,90 @@
+{% extends "core/base.html" %}
+{% block title %}Admissions{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>Admission Applications</h2>
+  {% if role != 'admin' and role != 'faculty' and role != 'staff' %}
+  <a class="btn" href="{% url 'apply' %}">+ New Application</a>
+  {% endif %}
+</div>
+
+{% if role == 'admin' or role == 'staff' %}
+<form method="get" class="panel" style="display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-bottom:16px">
+  <div>
+    <label>Program</label><br>
+    <select name="program" onchange="this.form.submit()">
+      <option value="">All programs</option>
+      {% for p in programs %}<option value="{{ p.pk }}" {% if filters.program == p.pk|stringformat:"s" %}selected{% endif %}>{{ p.name }}</option>{% endfor %}
+    </select>
+  </div>
+  <div>
+    <label>Province</label><br>
+    <select name="province" onchange="this.form.submit()">
+      <option value="">All provinces</option>
+      {% for code, label in provinces %}<option value="{{ code }}" {% if filters.province == code %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+  </div>
+  <div>
+    <label>District</label><br>
+    <input type="text" name="district" value="{{ filters.district }}" placeholder="e.g. Karachi" style="padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text)">
+  </div>
+  <div>
+    <label>Status</label><br>
+    <select name="status" onchange="this.form.submit()">
+      <option value="">All statuses</option>
+      {% for code, label in statuses %}<option value="{{ code }}" {% if filters.status == code %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+  </div>
+  <div><button class="btn" type="submit">Apply</button> <a class="btn ghost" href="{% url 'applications-list' %}">Reset</a></div>
+</form>
+{% endif %}
+
+<div class="panel">
+<table class="table">
+  <thead><tr><th>#</th><th>Applicant</th><th>Contact</th><th>Program</th>{% if role == 'admin' or role == 'staff' %}<th>District</th><th>Province</th>{% endif %}<th>Applied</th><th>Status</th><th>Entry Test</th><th></th></tr></thead>
+  <tbody>
+    {% for a in applications %}
+    <tr>
+      <td>{{ forloop.counter }}</td>
+      <td>{{ a.display_name }}{% if not a.applicant %} <span class="badge badge-pending">Guest</span>{% endif %}</td>
+      <td>{{ a.email|default:a.phone|default:"—" }}</td>
+      <td>{{ a.program }}</td>
+      {% if role == 'admin' or role == 'staff' %}
+      <td>{{ a.district|default:"—" }}</td>
+      <td>{{ a.get_province_display|default:"—" }}</td>
+      {% endif %}
+      <td>{{ a.applied_at|date:"M d, Y" }}</td>
+      <td><span class="badge badge-{{ a.status }}">{{ a.get_status_display }}</span></td>
+      <td>
+        {% if a.entry_test %}
+          {{ a.entry_test.roll_number }} - {{ a.entry_test.test_date|date:"M d" }}
+          {% if a.entry_test.is_evaluated %}
+            <br><span class="badge {% if a.entry_test.passed %}badge-yes{% else %}badge-no{% endif %}">{{ a.entry_test.marks_obtained }}/100 - {% if a.entry_test.passed %}Passed{% else %}Failed{% endif %}</span>
+          {% else %}
+            <br><span class="badge badge-pending">Awaiting result</span>
+          {% endif %}
+        {% else %}
+          <span class="muted">—</span>
+        {% endif %}
+      </td>
+      <td style="display:flex;flex-direction:column;gap:4px">
+        {% if a.applicant_id == request.user.id or role == 'admin' %}
+          {% if a.applicant %}<a class="btn ghost" href="{% url 'application-preferences' a.pk %}">🎓 Preferences</a>{% endif %}
+          {% if a.entry_test %}<a class="btn ghost" href="{% url 'entry-test-slip' a.pk %}">🎫 Slip</a>{% endif %}
+        {% endif %}
+        {% if role == 'admin' and a.entry_test and not a.entry_test.is_evaluated %}
+          <a class="btn ghost" href="{% url 'entry-test-result' a.entry_test.pk %}">Enter Result</a>
+          <a class="btn ghost" href="{% url 'entry-test-reschedule' a.entry_test.pk %}">Reschedule</a>
+        {% endif %}
+        {% if role == 'admin' and a.status == 'accepted' and a.applicant %}
+          <a class="btn ghost" href="/finance/add/?student={{ a.applicant.student_profile.id }}&category=semester">💳 Semester Fee</a>
+        {% endif %}
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="9" class="empty-row">No applications yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

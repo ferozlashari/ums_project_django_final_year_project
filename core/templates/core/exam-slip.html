@@ -1,0 +1,55 @@
+{% extends "core/base.html" %}
+{% block title %}Exam Slip - {{ student.full_name }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>🎫 Exam Eligibility &amp; Admit Slip</h2>
+  <div style="display:flex;gap:8px">
+    <a href="javascript:history.back()" class="btn ghost">← Back</a>
+    {% if eligible %}<button class="btn ghost" onclick="window.print()">🖨️ Print</button>{% endif %}
+  </div>
+</div>
+
+<div class="panel" style="max-width:640px;margin:0 auto">
+  <p><strong>{{ student.full_name }}</strong> — {{ student.admission_no }}{% if current_semester %} — {{ current_semester.name }}{% endif %}</p>
+
+  {% if course_status %}
+  <div style="display:grid;gap:10px;margin:14px 0">
+    {% for c in course_status %}
+    <div class="panel" style="padding:12px 14px;{% if c.eligible %}border-left:4px solid var(--success,#16a34a){% else %}border-left:4px solid var(--danger,#dc2626){% endif %}">
+      <div style="font-weight:700">{{ c.registration.section.course.code }} — {{ c.registration.section.course.name }}</div>
+      <div style="margin-top:6px;font-size:.85rem;display:flex;flex-direction:column;gap:2px">
+        <span>✓ Registered</span>
+        <span>{% if c.attendance_pct >= min_attendance_percent %}✓{% else %}✗{% endif %} Attendance {{ c.attendance_pct }}% (minimum {{ min_attendance_percent }}%)</span>
+        <span>{% if not unpaid_semester_fee %}✓{% else %}✗{% endif %} Semester fee paid</span>
+        <span>{% if c.eligible %}✓ Academically eligible{% else %}✗ Not yet eligible{% endif %}</span>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if eligible %}
+    <div class="msg success">✅ Eligible to sit exams this semester — every registered course meets the requirements above.</div>
+    <table class="table" style="margin-top:14px">
+      <thead><tr><th>Course</th><th>Exam</th><th>Date</th></tr></thead>
+      <tbody>
+        {% for e in upcoming_exams %}
+        <tr><td>{{ e.course.code }}</td><td>{{ e.name }}</td><td>{{ e.date }}</td></tr>
+        {% empty %}
+        <tr><td colspan="3" class="empty-row">No exams scheduled yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <div class="msg error">
+      ❌ Not eligible to sit exams right now:
+      <ul style="margin:8px 0 0 18px">
+        {% for r in reasons %}<li>{{ r }}</li>{% endfor %}
+      </ul>
+    </div>
+    {% if unpaid_semester_fee %}
+      <a class="btn" style="margin-top:12px" href="{% url 'pay-now' unpaid_semester_fee.pk %}">Pay Outstanding Fee</a>
+    {% endif %}
+  {% endif %}
+</div>
+{% endblock %}

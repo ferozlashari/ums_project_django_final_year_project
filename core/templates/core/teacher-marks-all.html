@@ -1,0 +1,42 @@
+{% extends "core/base.html" %}
+{% block title %}Marks - all classes{% endblock %}
+{% block content %}
+<div class="page-head"><h2>📝 Marks — all classes</h2>
+  <div><a class="btn ghost" href="{% url 'teacher-automation' %}">← Teacher Automation</a></div></div>
+<p class="muted" style="margin-top:-8px">Enter <b>original marks</b> for every class on one page. Totals and grades are calculated automatically. A blank box keeps the current value. Submitted students are locked until an officer reopens them.</p>
+
+<form method="get" class="panel" style="display:flex;flex-wrap:wrap;gap:10px;align-items:end">
+  <label>Subject<br><select name="course"><option value="">All subjects</option>{% for c in subjects %}<option value="{{ c.pk }}" {% if f.course|stringformat:"s" == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.code }} — {{ c.name }}</option>{% endfor %}</select></label>
+  <label>Class<br><select name="section"><option value="">All classes</option>{% for s in sections %}<option value="{{ s.pk }}" {% if f.section|stringformat:"s" == s.pk|stringformat:"s" %}selected{% endif %}>{{ s.course.code }} / {{ s.code }}</option>{% endfor %}</select></label>
+  {% if teachers %}<label>Teacher<br><select name="teacher"><option value="">All teachers</option>{% for t in teachers %}<option value="{{ t.pk }}" {% if f.teacher|stringformat:"s" == t.pk|stringformat:"s" %}selected{% endif %}>{{ t.user.get_full_name|default:t.user.username }}</option>{% endfor %}</select></label>{% endif %}
+  <label>Show<br><select name="status">
+    <option value="">Everyone</option><option value="incomplete" {% if f.status == 'incomplete' %}selected{% endif %}>Marks incomplete</option>
+    <option value="ready" {% if f.status == 'ready' %}selected{% endif %}>Complete, not submitted</option><option value="submitted" {% if f.status == 'submitted' %}selected{% endif %}>Submitted (locked)</option></select></label>
+  <label>Student<br><input type="search" name="q" value="{{ f.q }}" placeholder="name or admission no."></label>
+  <button class="btn" type="submit">Apply filters</button><a class="btn ghost" href="{% url 'teacher-marks-all' %}">Reset</a>
+</form>
+
+{% if skipped %}<div class="panel" style="border-left:4px solid #d97706;margin-top:10px">No assessment scheme yet for: {% for s in skipped %}{{ s.course.code }}/{{ s.code }}{% if not forloop.last %}, {% endif %}{% endfor %}. Administration defines the scheme; until then these classes cannot be marked here.</div>{% endif %}
+
+{% if blocks %}
+<form method="post">{% csrf_token %}<input type="hidden" name="qs" value="{{ qs }}">
+  {% for b in blocks %}
+  <input type="hidden" name="sections" value="{{ b.section.pk }}">
+  <details class="panel" style="margin-top:12px" open>
+    <summary style="cursor:pointer"><strong>{{ b.section.course.code }} — {{ b.section.course.name }}</strong> (Sec {{ b.section.code|default:"—" }})
+      <span class="muted"> · showing {{ b.sheet.rows|length }} of {{ b.all_students }} students</span></summary>
+    <div style="overflow-x:auto"><table class="table" style="margin-top:8px"><thead><tr><th>Student</th>
+      {% for c in b.sheet.components %}<th>{{ c.name }}<div class="muted" style="font-size:.72rem">max {{ c.max_marks|floatformat:"-2" }}</div></th>{% endfor %}<th>Total</th><th>Grade</th><th>Status</th></tr></thead><tbody>
+    {% for r in b.sheet.rows %}<tr><td>{{ r.student.full_name }}<div class="muted" style="font-size:.72rem">{{ r.student.admission_no }}</div></td>
+      {% for cell in r.cells %}<td>{% if r.locked %}{{ cell.value|default_if_none:"—" }}{% else %}<input style="width:72px" type="number" step="0.01" min="0" max="{{ cell.component.max_marks }}" name="mark_{{ r.registration.pk }}_{{ cell.component.pk }}" value="{{ cell.value|default_if_none:'' }}">{% endif %}</td>{% endfor %}
+      <td>{{ r.total }}</td><td>{% if r.complete %}<strong>{{ r.grade }}</strong>{% else %}<span class="muted">—</span>{% endif %}</td><td>{{ r.status }}</td></tr>{% endfor %}
+    </tbody></table></div>
+  </details>
+  {% endfor %}
+  <div style="position:sticky;bottom:0;background:var(--bg,#fff);padding:10px 0;display:flex;gap:8px;flex-wrap:wrap">
+    <button class="btn" type="submit" name="action" value="save">💾 Save all marks ({{ student_count }} students shown)</button>
+    <button class="btn ghost" type="submit" name="action" value="submit" onclick="return confirm('Submit every student whose marks are complete in the classes shown? Their marks will be locked.')">📤 Submit all complete results</button>
+  </div>
+</form>
+{% else %}<div class="panel muted" style="margin-top:12px">No students match these filters.</div>{% endif %}
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends "core/base.html" %}
+{% block title %}Verify Fee Challan{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>🧾 Verify Online Payment</h2>
+</div>
+<div class="panel" style="max-width:520px;margin:0 auto">
+  <p class="muted" style="margin-top:0">Enter a challan number to check its payment status — no login needed.</p>
+  <form method="get" style="display:flex;gap:8px">
+    <input type="text" name="challan_no" value="{{ challan_no }}" placeholder="e.g. UMS-260722-12345" required style="flex:1;padding:9px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text)">
+    <button class="btn" type="submit">Verify</button>
+  </form>
+
+  {% if throttled %}
+    <div class="msg error" style="margin-top:16px">Too many lookups. Please wait a few minutes and try again.</div>
+  {% endif %}
+
+  {% if searched %}
+    {% if invoice %}
+      <div class="msg {% if invoice.paid %}success{% else %}error{% endif %}" style="margin-top:16px">
+        {% if invoice.paid %}✅ This challan has been <strong>PAID</strong>.{% else %}❌ This challan is <strong>UNPAID</strong>.{% endif %}
+      </div>
+      <table class="table" style="margin-top:12px">
+        <tr><th style="width:160px">Challan No.</th><td>{{ invoice.challan_no }}</td></tr>
+        <tr><th>Category</th><td>{{ invoice.get_category_display }}</td></tr>
+        <tr><th>Amount</th><td>{{ currency_symbol }} {{ invoice.amount }}</td></tr>
+        <tr><th>Student</th><td>{{ invoice.student.full_name|slice:":1" }}••• ({{ invoice.student.admission_no|slice:":3" }}•••)</td></tr>
+        <tr><th>Due Date</th><td>{{ invoice.due_date|default:"—" }}</td></tr>
+      </table>
+    {% else %}
+      <div class="msg error" style="margin-top:16px">No challan found with that number. Double-check and try again.</div>
+    {% endif %}
+  {% endif %}
+
+  <p style="margin-top:16px"><a href="javascript:history.back()" class="btn ghost">← Back</a></p>
+</div>
+{% endblock %}

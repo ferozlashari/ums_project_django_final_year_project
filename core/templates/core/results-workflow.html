@@ -1,0 +1,22 @@
+{% extends "core/base.html" %}
+{% block title %}Result Verification{% endblock %}
+{% block content %}
+<div class="page-head"><h2>✅ Result Verification &amp; Publication</h2></div>
+<p class="muted" style="margin-top:-8px">Teacher submitted → department verified → exam office approved → published. Each step needs its own Results permission for the course's program; published results are locked and change only through an approved correction.</p>
+<div class="panel"><table class="table">
+  <thead><tr><th>Student</th><th>Course</th><th>Status</th><th>Action</th></tr></thead>
+  <tbody>
+  {% for it in items %}
+  <tr>
+    <td>{{ it.pub.registration.student.full_name }}</td>
+    <td>{{ it.pub.registration.section.course.code }} (Sec {{ it.pub.registration.section.code|default:"—" }})</td>
+    <td>{{ it.pub.get_status_display }}{% if it.pub.remarks %}<div class="muted" style="font-size:.8rem">{{ it.pub.remarks }}</div>{% endif %}</td>
+    <td>
+      {% if it.can_advance %}<form method="post" style="display:inline">{% csrf_token %}<input type="hidden" name="pub" value="{{ it.pub.pk }}"><button class="btn" type="submit">{{ it.stage.3 }}</button></form>{% endif %}
+      {% if it.can_reopen %}<form method="post" style="display:inline">{% csrf_token %}<input type="hidden" name="pub" value="{{ it.pub.pk }}"><input type="hidden" name="action" value="reopen"><input name="reason" placeholder="Reason (required)" required><button class="btn ghost" type="submit">Reopen</button></form>{% endif %}
+      {% if not it.can_advance and not it.can_reopen %}<span class="muted">view only</span>{% endif %}
+    </td>
+  </tr>
+  {% empty %}<tr><td colspan="4" class="muted">Nothing awaiting action.</td></tr>{% endfor %}
+  </tbody></table></div>
+{% endblock %}

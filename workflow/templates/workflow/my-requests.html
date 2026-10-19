@@ -1,0 +1,26 @@
+{% extends "core/base.html" %}
+{% block title %}My Requests{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>📋 My Approval Requests</h2>
+  <a class="btn" href="{% url 'submit-workflow-request' %}">+ New Request</a>
+</div>
+{% if requests %}
+<table class="table">
+  <thead><tr><th>Type</th><th>Subject</th><th>Requested</th><th>Status</th><th>Decision Notes</th></tr></thead>
+  <tbody>
+    {% for r in requests %}
+    <tr>
+      <td>{{ r.get_request_type_display }}</td>
+      <td>{{ r.subject }}</td>
+      <td>{{ r.created_at|date:"d M Y" }}</td>
+      <td><span class="badge badge-{{ r.status }}">{{ r.get_status_display }}</span></td>
+      <td class="muted">{{ r.decision_notes|default:"-" }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="muted">You haven't submitted any requests yet.</p>
+{% endif %}
+{% endblock %}

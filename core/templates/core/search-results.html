@@ -1,0 +1,53 @@
+{% extends "core/base.html" %}
+{% block title %}Search Results{% endblock %}
+{% block content %}
+<div class="page-head"><h2>Search Results for "{{ query }}"</h2></div>
+
+{% if not query %}
+  <p class="empty-row">Type something in the search bar above to look across students, teachers, courses, notices and library books.</p>
+{% else %}
+  {% if results.students %}
+  <div class="panel" style="margin-bottom:14px">
+    <h3 style="margin-top:0">🎓 Students</h3>
+    <ul class="search-result-list">
+      {% for s in results.students %}<li><a href="{% url 'student-list' %}">{{ s.full_name }} — {{ s.admission_no }}</a></li>{% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+  {% if results.teachers %}
+  <div class="panel" style="margin-bottom:14px">
+    <h3 style="margin-top:0">👩‍🏫 Teachers</h3>
+    <ul class="search-result-list">
+      {% for t in results.teachers %}<li><a href="{% url 'teacher-list' %}">{{ t.full_name }} — {{ t.employee_id }}</a></li>{% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+  {% if results.courses %}
+  <div class="panel" style="margin-bottom:14px">
+    <h3 style="margin-top:0">📚 Courses</h3>
+    <ul class="search-result-list">
+      {% for c in results.courses %}<li><a href="{% url 'course-list' %}">{{ c.code }} — {{ c.name }}</a></li>{% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+  {% if results.notices %}
+  <div class="panel" style="margin-bottom:14px">
+    <h3 style="margin-top:0">📢 Notices</h3>
+    <ul class="search-result-list">
+      {% for n in results.notices %}<li><a href="{% url 'notices-list' %}">{{ n.title }}</a></li>{% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+  {% if results.books %}
+  <div class="panel" style="margin-bottom:14px">
+    <h3 style="margin-top:0">📖 Library Books</h3>
+    <ul class="search-result-list">
+      {% for b in results.books %}<li><a href="{% url 'book-list' %}">{{ b.title }} — {{ b.author }}</a></li>{% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+  {% if not results.students and not results.teachers and not results.courses and not results.notices and not results.books %}
+    <p class="empty-row">No matches found for "{{ query }}".</p>
+  {% endif %}
+{% endif %}
+{% endblock %}

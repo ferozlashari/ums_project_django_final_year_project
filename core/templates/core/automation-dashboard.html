@@ -1,0 +1,15 @@
+{% extends 'core/base.html' %}
+{% block content %}
+<div class="page-head"><div><h1>Automation & System Control</h1><p class="muted">Normal university operations are evaluated by deterministic rules. Admin action is reserved for configuration and exceptions.</p></div></div>
+<div class="grid-4">
+  <div class="card"><strong>{{ stats.fee_due }}</strong><span>Fee reminders due</span></div>
+  <div class="card"><strong>{{ stats.overdue }}</strong><span>Overdue fees detected</span></div>
+  <div class="card"><strong>{{ stats.low_attendance }}</strong><span>Attendance warnings</span></div>
+  <div class="card"><strong>{{ pending_payments }}</strong><span>Payments awaiting verification</span></div>
+</div>
+<div class="panel" style="margin-top:18px"><h2>Exceptional cases</h2><ul>
+<li>{{ pending_retake }} retake/improvement applications pending review</li>
+<li>{{ overdue_invoices }} overdue invoices</li>
+<li>{{ unread_notifications }} unread notifications across the system</li>
+</ul><p class="muted">Routine reminders are sent from the Automation Center.</p></div>
+{% endblock %}

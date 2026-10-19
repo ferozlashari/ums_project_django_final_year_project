@@ -1,0 +1,42 @@
+# Lightweight single-server stack: PostgreSQL + the app. NO Redis, worker or beat.
+# The app runs its own built-in scheduler (SCHEDULER_MODE=builtin).
+#   cp .env.example .env   (set DJANGO_SECRET_KEY, FIELD_ENCRYPTION_KEY, POSTGRES_PASSWORD)
+#   docker compose -f docker-compose.lite.yml up --build      ->  http://localhost:8000
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-ums}
+      POSTGRES_USER: ${POSTGRES_USER:-umsuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    volumes: [postgres_data:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-umsuser}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+  web:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DB_ENGINE: postgresql
+      POSTGRES_HOST: db
+      SCHEDULER_MODE: builtin
+      CELERY_BROKER_URL: ""
+    entrypoint: ["bash", "deployment/start-single.sh"]
+    command: []
+    depends_on:
+      db: {condition: service_healthy}
+    ports: ["8000:8000"]
+    volumes: [media_data:/app/media]
+    healthcheck:
+      test: ["CMD", "python", "deployment/healthcheck.py"]
+      interval: 10s
+      timeout: 6s
+      retries: 12
+      start_period: 40s
+volumes:
+  postgres_data:
+  media_data:

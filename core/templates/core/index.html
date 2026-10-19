@@ -1,0 +1,27 @@
+{% extends "core/base.html" %}
+{% block title %}Home - {{ site_name }}{% endblock %}
+{% block content %}
+<section class="hero">
+  <span class="eyebrow">Campus Operations, Simplified</span>
+  <h1>Welcome to {{ site_full_name }}</h1>
+  <p>One place to manage students, faculty, courses, timetables, exams, attendance and finance &mdash; built for administrators, teachers and students alike.</p>
+  <div class="hero-links">
+    {% if user.is_authenticated %}
+      <a class="btn" href="{% url 'dashboard' %}">Go to My Dashboard</a>
+    {% else %}
+      <a class="btn" href="{% url 'login' %}">Login</a>
+      <a class="btn ghost" href="{% url 'register' %}">Create an Account</a>
+      <a class="btn ghost" href="{% url 'apply-public' %}">📝 Apply for Admission</a>
+    {% endif %}
+  </div>
+</section>
+
+<div class="grid feature-grid">
+  <div class="dash-card static"><span class="dash-icon">🎓</span><strong>Student Records</strong><p>Admissions, enrollment, and academic status in one view.</p></div>
+  <div class="dash-card static"><span class="dash-icon">🧑‍🏫</span><strong>Faculty &amp; HR</strong><p>Staff records, departments and payroll tracking.</p></div>
+  <div class="dash-card static"><span class="dash-icon">📚</span><strong>Courses &amp; Timetables</strong><p>Programs, course sections and clash-free scheduling.</p></div>
+  <div class="dash-card static"><span class="dash-icon">📝</span><strong>Exams &amp; Results</strong><p>Exam sessions, grading and student result history.</p></div>
+  <div class="dash-card static"><span class="dash-icon">🗓️</span><strong>Attendance</strong><p>Daily attendance capture with instant summaries.</p></div>
+  <div class="dash-card static"><span class="dash-icon">💳</span><strong>Finance</strong><p>Invoices, payments and outstanding balance tracking.</p></div>
+</div>
+{% endblock %}

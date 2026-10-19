@@ -1,0 +1,33 @@
+Django>=5.0,<6.0
+djangorestframework>=3.15
+django-filter>=24.2
+Pillow>=10.3
+
+# --- Database driver for PostgreSQL (set DB_ENGINE=postgresql in .env) ---
+psycopg2-binary>=2.9
+# mysqlclient>=2.2       # only needed when DB_ENGINE=mysql - uncomment before installing (requires system MySQL client dev headers to build)
+
+# --- Security / encryption ---
+cryptography>=42.0
+
+# --- Static files in production ---
+whitenoise>=6.6
+
+# --- Production server ---
+gunicorn>=22.0
+
+# --- Two-factor auth (fingerprint / face / security key via WebAuthn) ---
+webauthn>=2.2.0
+
+# --- Digital Student ID QR codes ---
+qrcode>=7.4
+
+# --- Optional cloud storage (set CLOUD_STORAGE_PROVIDER=s3 in .env) ---
+# django-storages>=1.14
+# boto3>=1.34
+
+# --- Background automation ---
+celery>=5.4,<6.0
+redis>=5.0,<6.0
+requests==2.32.3
+dj-database-url>=2.2

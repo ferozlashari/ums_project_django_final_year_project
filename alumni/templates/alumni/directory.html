@@ -1,0 +1,44 @@
+{% extends "core/base.html" %}
+{% block title %}Alumni Network{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>🎓 Alumni Network</h2>
+  <div style="display:flex;gap:8px">
+    {% if can_join %}
+    <a class="btn" href="{% url 'alumni-my-profile' %}">{% if my_profile %}Edit My Alumni Profile{% else %}Join the Directory{% endif %}</a>
+    {% endif %}
+    {% if my_profile %}<a class="btn ghost" href="{% url 'my-mentorship-requests' %}">Mentorship Requests</a>{% endif %}
+    {% if current_role == 'admin' %}<a class="btn ghost" href="{% url 'admin-alumni-list' %}">Manage All</a>{% endif %}
+  </div>
+</div>
+
+<form method="get" class="panel" style="display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-bottom:16px">
+  <div><label>Search</label><br><input type="text" name="q" value="{{ q }}" placeholder="Employer, industry, name"></div>
+  <div><label>Graduation Year</label><br><input type="number" name="year" value="{{ year }}" placeholder="e.g. 2024"></div>
+  <button class="btn ghost" type="submit">Filter</button>
+  {% if q or year %}<a class="btn ghost" href="{% url 'alumni-directory' %}">Clear</a>{% endif %}
+</form>
+
+<div class="cards-grid">
+  {% for p in profiles %}
+  <div class="panel">
+    <h3 style="margin-top:0">{{ p.student.full_name }}</h3>
+    <p class="muted">Class of {{ p.graduation_year }} &middot; {{ p.student.program|default:"—" }}</p>
+    {% if p.job_title or p.current_employer %}<p><strong>{{ p.job_title }}</strong>{% if p.current_employer %} at {{ p.current_employer }}{% endif %}</p>{% endif %}
+    {% if p.industry %}<p class="muted">{{ p.industry }}{% if p.city %} &middot; {{ p.city }}{% if p.country %}, {{ p.country }}{% endif %}{% endif %}</p>{% endif %}
+    {% if p.bio %}<p>{{ p.bio|truncatewords:30 }}</p>{% endif %}
+    <div style="display:flex;gap:8px;margin-top:8px">
+      {% if p.linkedin_url %}<a class="btn ghost" href="{{ p.linkedin_url }}" target="_blank" rel="noopener">LinkedIn</a>{% endif %}
+      {% if p.willing_to_mentor and current_role == 'student' %}
+        <a class="btn" href="{% url 'alumni-request-mentorship' p.pk %}">Request Mentorship</a>
+      {% elif p.willing_to_mentor %}
+        <span class="badge badge-available">Open to mentoring</span>
+      {% endif %}
+      {% if not p.is_public %}<span class="badge badge-pending">Private</span>{% endif %}
+    </div>
+  </div>
+  {% empty %}
+  <p class="empty-row">No alumni profiles yet.</p>
+  {% endfor %}
+</div>
+{% endblock %}

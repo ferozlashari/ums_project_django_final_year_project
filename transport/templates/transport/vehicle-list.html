@@ -1,0 +1,27 @@
+{% extends "core/base.html" %}
+{% block title %}Vehicles{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>Vehicles</h2>
+  <div style="display:flex;gap:8px">
+    <a class="btn ghost" href="{% url 'transport-route-list' %}">← Routes</a>
+    <a class="btn" href="{% url 'transport-vehicle-add' %}">+ Add Vehicle</a>
+  </div>
+</div>
+<div class="panel">
+<table class="table">
+  <thead><tr><th>Registration No.</th><th>Capacity</th><th>Driver</th><th>Phone</th><th>Status</th></tr></thead>
+  <tbody>
+    {% for v in vehicles %}
+    <tr>
+      <td>{{ v.registration_no }}</td><td>{{ v.capacity }}</td><td>{{ v.driver_name|default:"—" }}</td>
+      <td>{{ v.driver_phone|default:"—" }}</td>
+      <td><span class="badge {% if v.is_active %}badge-available{% else %}badge-unavailable{% endif %}">{% if v.is_active %}Active{% else %}Inactive{% endif %}</span></td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="5" class="empty-row">No vehicles yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

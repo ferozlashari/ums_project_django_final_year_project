@@ -1,0 +1,24 @@
+{% extends "core/base.html" %}
+{% block title %}Apply Now - {{ site_name }}{% endblock %}
+{% block content %}
+<section class="hero" style="padding:36px 28px">
+  <span class="eyebrow">Online Admissions</span>
+  <h1 style="font-size:1.8rem;margin-top:6px">Apply in minutes — no account needed</h1>
+  <p>Fill in your details below and our admissions team will reach out. You can create a full account later to track your application status online.</p>
+</section>
+
+<div class="panel" style="max-width:560px;margin:20px auto">
+  {% if submitted %}
+    <div class="msg success">🎉 Application received! Your entry test roll number is <strong>{{ roll_number }}</strong> - save this for reference. We'll contact you at the email or phone number you provided with the test date/venue.</div>
+    <p style="margin-top:14px"><a class="btn" href="{% url 'apply-public' %}">Submit another application</a></p>
+  {% else %}
+    <form method="post" enctype="multipart/form-data" novalidate>
+      {% csrf_token %}
+      {{ form.as_p }}
+      <div class="form-actions">
+        <button class="btn" type="submit">Submit Application</button>
+      </div>
+    </form>
+  {% endif %}
+</div>
+{% endblock %}

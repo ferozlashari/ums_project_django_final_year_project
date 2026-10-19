@@ -1,0 +1,31 @@
+{% extends "core/base.html" %}
+{% block title %}Classrooms{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>🏫 Classrooms</h2>
+  {% if current_role != 'student' %}<a class="btn" href="{% url 'room-add' %}">+ Add Classroom</a>{% endif %}
+</div>
+<div class="panel">
+<table class="table">
+  <thead><tr><th>Name</th><th>Type</th><th>Building</th><th>Floor</th><th>Capacity</th><th>Facilities</th></tr></thead>
+  <tbody>
+    {% for r in rooms %}
+    <tr>
+      <td>{{ r.name }}</td>
+      <td>{{ r.get_room_type_display }}</td>
+      <td>{{ r.building|default:"—" }}</td>
+      <td>{{ r.floor|default:"—" }}</td>
+      <td>{{ r.capacity }}</td>
+      <td>
+        {% if r.has_projector %}📽️ Projector {% endif %}
+        {% if r.has_computers %}💻 Computers{% endif %}
+        {% if not r.has_projector and not r.has_computers %}—{% endif %}
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="6" class="empty-row">No classrooms added yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

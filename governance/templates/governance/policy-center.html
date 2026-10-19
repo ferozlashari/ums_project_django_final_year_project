@@ -1,0 +1,14 @@
+{% extends "core/base.html" %}
+{% block title %}Policy Center{% endblock %}
+{% block content %}
+<div class="page-head"><h2>📜 Policy Center</h2></div>
+<p class="muted">Each change creates a NEW version; older versions are kept as history. The most specific scope in effect today wins (program &gt; department &gt; faculty &gt; university).</p>
+<div class="panel"><h3>Publish a new policy version</h3>
+<form method="post">{% csrf_token %}{{ form.as_p }}<button class="btn" type="submit">Create version</button></form></div>
+{% for r in rules %}<div class="panel"><h3>{{ r.name }} <span class="muted">({{ r.key }})</span></h3>
+<table class="table"><thead><tr><th>Version</th><th>Value</th><th>Scope</th><th>Effective</th><th>Reason</th></tr></thead><tbody>
+{% for v in r.versions.all %}<tr><td>v{{ v.version }}</td><td>{{ v.value }}</td><td>{{ v.get_scope_type_display }}{% if v.scope_id %} #{{ v.scope_id }}{% endif %}</td>
+<td>{{ v.effective_from }} → {{ v.effective_until|default_if_none:"open" }}</td><td>{{ v.reason }}</td></tr>
+{% empty %}<tr><td colspan="5" class="muted">Not configured - the built-in / Site Settings value applies.</td></tr>{% endfor %}
+</tbody></table></div>{% endfor %}
+{% endblock %}

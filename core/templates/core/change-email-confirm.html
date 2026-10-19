@@ -1,0 +1,13 @@
+{% extends "core/base.html" %}
+{% block title %}Confirm new email{% endblock %}
+{% block content %}
+<div class="auth-card" style="text-align:center">
+  <h2>Confirm your new email</h2>
+  <p class="muted">We sent a 6-digit code to <strong>{{ pending }}</strong>. Your email changes only after you enter it.</p>
+  {% if dev_code %}<div class="panel" style="background:var(--warn-bg)"><strong>Test mode</strong> - code: <strong>{{ dev_code }}</strong></div>{% endif %}
+  <form method="post">{% csrf_token %}
+    <input name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" required autofocus style="font-size:1.6rem;letter-spacing:8px;text-align:center;width:11em">
+    <div class="form-actions" style="margin-top:14px"><button class="btn" type="submit">Confirm</button> <a class="btn ghost" href="{% url 'edit-profile' %}">Cancel</a></div>
+  </form>
+</div>
+{% endblock %}

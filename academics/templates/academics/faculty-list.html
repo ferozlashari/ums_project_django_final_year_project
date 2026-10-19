@@ -1,0 +1,25 @@
+{% extends "core/base.html" %}
+{% block title %}Faculties{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>🏫 Faculties</h2>
+  {% if current_role == 'admin' %}<a class="btn" href="{% url 'faculty-add' %}">+ Add Faculty</a>{% endif %}
+</div>
+<div class="panel">
+<table class="table">
+  <thead><tr><th>Name</th><th>Dean</th><th>Departments</th>{% if current_role == 'admin' %}<th></th>{% endif %}</tr></thead>
+  <tbody>
+    {% for f in faculties %}
+    <tr>
+      <td>{{ f.name }}</td>
+      <td>{{ f.dean|default:"—" }}</td>
+      <td>{{ f.departments.count }}</td>
+      {% if current_role == 'admin' %}<td><a class="btn ghost" href="{% url 'faculty-edit' f.pk %}">Edit</a></td>{% endif %}
+    </tr>
+    {% empty %}
+    <tr><td colspan="4" class="empty-row">No faculties yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

@@ -1,0 +1,69 @@
+{% extends "core/base.html" %}
+{% block title %}My Documents{% endblock %}
+{% block content %}
+<div class="page-head"><h2>📄 Document Center</h2></div>
+
+{% if is_own_documents %}
+<p class="muted" style="margin-top:-8px">Every official document tied to your record, in one place.</p>
+<div class="stat-grid" style="margin-bottom:20px">
+  <a class="stat-card" href="{% url 'my-id-card' %}"><span class="stat-value">🪪</span><span class="stat-label">Student ID Card</span></a>
+  <a class="stat-card" href="{% url 'my-exam-slip' %}"><span class="stat-value">🎫</span><span class="stat-label">Exam Slip</span></a>
+  <a class="stat-card" href="{% url 'marksheet' student.id %}"><span class="stat-value">📊</span><span class="stat-label">Marksheet</span></a>
+  <a class="stat-card" href="{% url 'result-checker' %}"><span class="stat-value">📈</span><span class="stat-label">Results / GPA</span></a>
+</div>
+
+<h3>Fee Challans &amp; Receipts</h3>
+<div class="panel">
+<table class="table">
+  <thead><tr><th>Challan #</th><th>Category</th><th>Amount</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+    {% for c in challans %}
+    <tr>
+      <td>{{ c.challan_no }}</td>
+      <td>{{ c.get_category_display }}</td>
+      <td>Rs. {{ c.amount }}</td>
+      <td><span class="badge {% if c.paid %}badge-paid{% else %}badge-pending{% endif %}">{% if c.paid %}Paid - Receipt{% else %}Unpaid{% endif %}</span></td>
+      <td><a class="btn ghost" href="{% url 'challan-detail' c.pk %}">{% if c.paid %}View Receipt{% else %}View Challan{% endif %}</a></td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="5" class="empty-row">No challans yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+
+{% else %}
+<p class="muted" style="margin-top:-8px">Look up a student to view their documents. Every link below goes through the same access-controlled pages students use themselves.</p>
+<form method="get" class="panel" style="display:flex;gap:10px;align-items:end;margin-bottom:16px">
+  <div style="flex:1;max-width:360px">
+    <label>Search by name or admission number</label><br>
+    <input type="text" name="q" value="{{ search }}" style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text)">
+  </div>
+  <button class="btn" type="submit">Search</button>
+</form>
+
+{% if search %}
+<div class="panel">
+<table class="table">
+  <thead><tr><th>Student</th><th>Admission No.</th><th>Program</th><th>Documents</th></tr></thead>
+  <tbody>
+    {% for s in found_students %}
+    <tr>
+      <td>{{ s.full_name }}</td>
+      <td>{{ s.admission_no }}</td>
+      <td>{{ s.program|default:"—" }}</td>
+      <td style="display:flex;gap:6px;flex-wrap:wrap">
+        <a class="btn ghost" href="{% url 'id-card' s.pk %}">ID Card</a>
+        <a class="btn ghost" href="{% url 'exam-slip' s.pk %}">Exam Slip</a>
+        <a class="btn ghost" href="{% url 'marksheet' s.pk %}">Marksheet</a>
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="4" class="empty-row">No students matched "{{ search }}".</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endif %}
+{% endif %}
+{% endblock %}

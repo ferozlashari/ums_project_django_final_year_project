@@ -1,0 +1,78 @@
+{% extends "core/base.html" %}
+{% block title %}Pay Challan {{ invoice.challan_no }}{% endblock %}
+{% block content %}
+<div class="page-head"><h2>Pay Challan {{ invoice.challan_no }}</h2><a href="javascript:history.back()" class="btn ghost">← Back</a></div>
+<div class="panel" style="max-width:640px;margin:0 auto">
+  <p>Amount due: <strong>{{ currency_symbol }} {{ invoice.amount }}</strong> for {{ invoice.get_category_display }}</p>
+  <p class="muted">Pick a method below, actually send the payment using the real app/bank, then submit your reference number here so the accounts office can confirm it.</p>
+
+  <div class="pay-option-cards">
+    <div class="pay-option-card">
+      <h4>📱 JazzCash</h4>
+      <p>Send to mobile account: <strong>{{ bank.jazzcash_number }}</strong> <button type="button" class="btn ghost copy-btn" data-copy="{{ bank.jazzcash_number }}">Copy</button></p>
+      <div class="pay-option-links">
+        <a class="btn ghost" href="jazzcash://">Open JazzCash App</a>
+      </div>
+      <p class="muted" style="font-size:.78rem;margin:6px 0 0">If tapping doesn't open the app, launch JazzCash yourself and send to the number above.</p>
+    </div>
+
+    <div class="pay-option-card">
+      <h4>📱 EasyPaisa</h4>
+      <p>Send to mobile account: <strong>{{ bank.easypaisa_number }}</strong> <button type="button" class="btn ghost copy-btn" data-copy="{{ bank.easypaisa_number }}">Copy</button></p>
+      <div class="pay-option-links">
+        <a class="btn ghost" href="easypaisa://">Open EasyPaisa App</a>
+      </div>
+      <p class="muted" style="font-size:.78rem;margin:6px 0 0">If tapping doesn't open the app, launch EasyPaisa yourself and send to the number above.</p>
+    </div>
+
+    <div class="pay-option-card">
+      <h4>🏦 Bank Transfer</h4>
+      <p>{{ bank.bank_name }}</p>
+      <p>Account: <strong>{{ bank.account_no }}</strong> <button type="button" class="btn ghost copy-btn" data-copy="{{ bank.account_no }}">Copy</button></p>
+      <p>IBAN: <strong>{{ bank.iban }}</strong> <button type="button" class="btn ghost copy-btn" data-copy="{{ bank.iban }}">Copy</button></p>
+      <p class="muted" style="font-size:.8rem">Open your own bank's app and transfer to this account.</p>
+    </div>
+
+    <div class="pay-option-card">
+      <h4>💳 Pay Online (Safepay)</h4>
+      {% if safepay_configured %}
+      <p class="muted" style="font-size:.85rem">Opens Safepay's real, official checkout page. Payment is confirmed automatically - no reference number needed.</p>
+      <form method="get" action="{% url 'gateway-checkout' invoice.pk %}">
+        <button class="btn" type="submit">Pay {{ currency_symbol }} {{ invoice.amount }} Online →</button>
+      </form>
+      {% else %}
+      <p class="muted" style="font-size:.85rem">Not configured yet - online payment is not available at the moment. Please pay with your bank challan.</p>
+      {% endif %}
+    </div>
+
+    <div class="pay-option-card">
+      <h4>💵 Cash</h4>
+      <p class="muted">Pay in person at the campus accounts office and bring the receipt number here.</p>
+    </div>
+  </div>
+
+  <form method="post" style="margin-top:20px">
+    {% csrf_token %}
+    <label style="font-weight:700">I paid via:</label>
+    <div class="pay-methods">
+      {% for value, label in form.method.field.choices %}
+        {% if value %}
+        <label class="pay-method-card">
+          <input type="radio" name="method" value="{{ value }}" required>
+          <div>{{ label }}</div>
+        </label>
+        {% endif %}
+      {% endfor %}
+    </div>
+    {{ form.transaction_id }}
+    <div class="form-actions" style="margin-top:14px">
+      <button class="btn" type="submit">Submit Payment Reference</button>
+      <a class="btn ghost" href="{% url 'challan-detail' invoice.pk %}">Cancel</a>
+    </div>
+  </form>
+
+  {% if not safepay_configured %}
+  <p class="ai-hint" style="margin-top:14px">Online card payment isn't set up yet - Safepay's Sandbox is free and needs no business documents (see the README). JazzCash, EasyPaisa and bank direct-merchant integration need a real registered business account, so those stay as "send money, then submit your reference" until one exists.</p>
+  {% endif %}
+</div>
+{% endblock %}

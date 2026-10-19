@@ -1,0 +1,27 @@
+{% extends "core/base.html" %}
+{% block title %}My Salary{% endblock %}
+{% block content %}
+<div class="page-head"><h2>💰 My Salary</h2></div>
+<div class="panel" style="max-width:600px;margin-bottom:16px">
+  <p><strong>{{ staff.full_name }}</strong> — {{ staff.get_role_display|default:"—" }}</p>
+  <p class="muted">Monthly salary on file: {{ currency_symbol }} {{ staff.monthly_salary|default:"Not set - contact admin" }}</p>
+</div>
+<div class="panel">
+<table class="table">
+  <thead><tr><th>Month</th><th>Amount</th><th>Status</th><th>Paid On</th><th>Reference</th></tr></thead>
+  <tbody>
+    {% for p in payslips %}
+    <tr>
+      <td>{{ p.month|date:"F Y" }}</td>
+      <td>{{ currency_symbol }} {{ p.amount }}</td>
+      <td><span class="badge {% if p.status == 'paid' %}badge-yes{% else %}badge-pending{% endif %}">{{ p.get_status_display }}</span></td>
+      <td>{{ p.paid_at|date:"M d, Y"|default:"—" }}</td>
+      <td>{{ p.reference|default:"—" }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="5" class="empty-row">No payslips recorded yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

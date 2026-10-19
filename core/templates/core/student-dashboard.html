@@ -1,0 +1,292 @@
+{% extends "core/base.html" %}
+{% block title %}Student Dashboard{% endblock %}
+{% block content %}
+<style>
+  .fold{background:var(--card,#fff);border:1px solid var(--border,#e5e7eb);border-radius:12px;margin-top:10px}
+  .fold>summary{cursor:pointer;padding:12px 16px;font-weight:600;list-style:none;display:flex;justify-content:space-between;gap:12px;align-items:center}
+  .fold>summary::-webkit-details-marker{display:none}
+  .fold>summary .hint{font-weight:400;color:var(--muted,#64748b);font-size:.85rem}
+  .fold>summary::after{content:"＋";color:var(--muted,#64748b)}
+  .fold[open]>summary::after{content:"－"}
+  .fold>.fold-body{padding:0 16px 14px}
+  .quick-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:14px}
+  .quick-row a{display:flex;flex-direction:column;align-items:center;gap:4px;padding:14px 8px;border-radius:12px;background:var(--card,#fff);border:1px solid var(--border,#e5e7eb);text-decoration:none;font-weight:600;text-align:center}
+  .quick-row a span{font-size:1.5rem}
+  .all-ok{border-left:4px solid #16a34a}
+</style>
+
+<div class="page-head">
+  <div>
+    <h2 style="margin-bottom:2px">Welcome, {{ user.get_full_name|default:user.username }} 👋</h2>
+    <p class="muted" style="margin:0">{{ student.admission_no|default:"" }}{% if student.program %} — {{ student.program }}{% endif %}{% if academic_position %} — Year {{ academic_position.year }}, Semester {{ academic_position.semester }}{% if academic_position.is_final_semester %} (Final){% endif %}{% elif current_semester %} — {{ current_semester.name }}{% endif %}</p>
+  </div>
+  <a class="btn ghost" href="{% url 'my-id-card' %}">🪪 My ID Card</a>
+</div>
+
+{# ---- the four numbers that matter most ---- #}
+<div class="stat-grid">
+  <div class="stat-card {% if attendance_pct and attendance_pct < 80 %}stat-card-warn{% endif %}">
+    <span class="stat-value">{{ attendance_pct|default:"—" }}{% if attendance_pct %}%{% endif %}</span><span class="stat-label">Attendance</span>
+  </div>
+  <div class="stat-card"><span class="stat-value">{{ cgpa|default_if_none:"—" }}</span><span class="stat-label">CGPA</span></div>
+  <div class="stat-card {% if unpaid_invoices %}stat-card-warn{% endif %}">
+    <span class="stat-value">{{ unpaid_invoices|default:0 }}</span><span class="stat-label">Unpaid Challans</span>
+  </div>
+  <div class="stat-card"><span class="stat-value">{{ registered_courses|default:0 }}</span><span class="stat-label">Registered Courses</span></div>
+</div>
+
+{# ---- what to do now ---- #}
+{% if action_needed_count %}
+<div class="dash-card-block" style="margin-top:16px;border-left:4px solid #d97706">
+  <h3>⚡ Do this now ({{ action_needed_count }})</h3>
+
+
+  {% if overdue_invoice_count %}
+  <div class="dash-list-item">
+    <span>{{ overdue_invoice_count }} fee challan{{ overdue_invoice_count|pluralize }} overdue</span>
+    <a class="btn ghost" href="{% url 'fees-list' %}">Pay now</a>
+  </div>
+  {% endif %}
+
+  {% for action in eligible_retake_actions %}
+  <div class="dash-list-item">
+    <span>{{ action.grade_entry.exam.course.code }} — eligible for {{ action.kind }}</span>
+    <a class="btn ghost" href="{% url 'result-checker' %}">Apply</a>
+  </div>
+  {% endfor %}
+  {% if eligible_retake_count > eligible_retake_actions|length %}
+  <div class="dash-list-item"><span class="muted">+{{ eligible_retake_count|add:"-5" }} more — see Results</span></div>
+  {% endif %}
+
+  {% if not hostel_status and hostel_vacancy_available %}
+  <div class="dash-list-item">
+    <span>Hostel beds matching your gender are currently open</span>
+    <a class="btn ghost" href="{% url 'hostel-apply' %}">Apply</a>
+  </div>
+  {% endif %}
+</div>
+{% else %}
+<div class="dash-card-block all-ok" style="margin-top:16px"><strong>✅ Nothing needs your attention right now.</strong></div>
+{% endif %}
+
+{# ---- today and coming up ---- #}
+<div class="dash-two-col" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;margin-top:16px">
+  <div class="dash-card-block">
+    <h3>⏰ Today's Classes <a href="{% url 'timetable-list' %}">Timetable</a></h3>
+    {% if dash.todays_classes %}
+    <ul class="list-plain" style="list-style:none;padding:0;margin:0">
+      {% for c in dash.todays_classes %}
+      <li style="display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid var(--border,#eee){% if c.state == 'done' %};opacity:.55{% endif %}">
+        <span><strong>{{ c.course.code }}</strong> — {{ c.course.name }}<br><span class="muted" style="font-size:.8rem">{{ c.room }}</span></span>
+        <span style="white-space:nowrap">{{ c.start|time:"H:i" }}–{{ c.end|time:"H:i" }}{% if c.state == 'now' %} <span class="badge">now</span>{% endif %}</span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}<p class="muted">No classes scheduled for you today.</p>{% endif %}
+  </div>
+
+  <div class="dash-card-block">
+    <h3>📅 Upcoming &amp; Due</h3>
+    {% if dash.upcoming %}
+    <ul style="list-style:none;padding:0;margin:0">
+      {% for u in dash.upcoming|slice:":8" %}
+      <li style="display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid var(--border,#eee)">
+        <a href="{{ u.url }}">{{ u.icon }} {{ u.title }} <span class="muted">· {{ u.course }}</span></a>
+        <span style="white-space:nowrap;{% if u.urgent %}color:var(--warn);font-weight:600{% endif %}">
+          {% if u.note == 'overdue' %}overdue{% elif u.when %}{{ u.when|date:"d M" }}{% if u.kind != 'Exam' %} {{ u.when|date:"H:i" }}{% endif %}{% else %}{{ u.note }}{% endif %}{% if u.note == 'live now' %}live now{% endif %}
+        </span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}<p class="muted">Nothing due in the next two weeks.</p>{% endif %}
+  </div>
+</div>
+
+{# ---- the six things students do most ---- #}
+<div class="quick-row">
+  <a href="{% url 'student-automation' %}"><span>⚡</span>Register courses &amp; get challan</a>
+  <a href="{% url 'results' %}"><span>📊</span>My Results</a>
+  <a href="{% url 'fees-list' %}"><span>💳</span>Fees &amp; Challans</a>
+  <a href="{% url 'timetable-list' %}"><span>⏰</span>My Timetable</a>
+  <a href="{% url 'assignment-list' %}"><span>📝</span>Assignments</a>
+  <a href="{% url 'quiz-list' %}"><span>❓</span>Quizzes</a>
+</div>
+
+{# ---- everything else, tucked away until you want it ---- #}
+<details class="fold" {% if attendance_low_count %}open{% endif %}>
+  <summary>✅ Attendance by Subject{% if current_semester %} — {{ current_semester.name }}{% endif %}
+    <span class="hint">{% if attendance_low_count %}{{ attendance_low_count }} subject{{ attendance_low_count|pluralize }} below 80%{% else %}tap to see each subject{% endif %}</span></summary>
+  <div class="fold-body">{% if attendance_by_course %}
+<table class="table">
+    <thead><tr><th>Course</th><th>Section</th><th>Present</th><th>%</th></tr></thead>
+    <tbody>
+      {% for row in attendance_by_course %}
+      <tr>
+        <td>{{ row.course.code }} — {{ row.course.name }}</td>
+        <td>{{ row.section.code }}</td>
+        <td>{{ row.present }} / {{ row.total }}</td>
+        <td>
+          {% if row.pct is not None %}
+            <span {% if row.pct < 80 %}style="color:var(--warn);font-weight:600"{% endif %}>{{ row.pct }}%</span>
+          {% else %}
+            <span class="muted">No records yet</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>{% else %}<p class="muted">No attendance has been recorded yet.</p>{% endif %}</div>
+</details>
+
+<details class="fold" {% if unpaid_invoice_list %}open{% endif %}>
+  <summary>💳 Fees Due <span class="hint">{% if unpaid_invoice_list %}{{ unpaid_invoices|default:0 }} unpaid{% else %}all clear{% endif %}</span></summary>
+  <div class="fold-body">{% if unpaid_invoice_list %}
+
+  {% for inv in unpaid_invoice_list %}
+  <div class="dash-list-item">
+    <span>{{ inv.get_category_display }} — {{ inv.challan_no }}{% if inv.is_overdue %} <span class="badge badge-overdue">overdue</span>{% endif %}</span>
+    <span class="meta">Rs {{ inv.amount }}{% if inv.due_date %} · due {{ inv.due_date }}{% endif %}</span>
+  </div>
+  {% endfor %}
+<a class="btn ghost" href="{% url 'fees-list' %}">View all fees</a>{% else %}<p class="muted">You have no unpaid challans.</p>{% endif %}</div>
+</details>
+
+<details class="fold">
+  <summary>📊 Current Assessment Progress <span class="hint">your marks, shown once published</span></summary>
+  <div class="fold-body">{% if assessment_progress %}
+
+  <table class="table"><thead><tr><th>Subject</th><th>Final Result</th><th>Status</th></tr></thead><tbody>
+  {% for item in assessment_progress %}<tr><td>{{ item.registration.section.course.code }} — {{ item.registration.section.course.name }}</td><td>{% if item.published %}{{ item.percentage }}%{% else %}<span class="muted">—</span>{% endif %}</td><td>{% if item.published %}<span class="badge">Published</span>{% elif item.awaiting %}<span class="muted">Awaiting verification</span>{% else %}<span class="muted">In progress</span>{% endif %}</td></tr>{% endfor %}
+  </tbody></table>
+{% else %}<p class="muted">No marks to show yet.</p>{% endif %}</div>
+</details>
+
+<details class="fold">
+  <summary>🎓 Degree Progress <span class="hint">CGPA, credits and GPA by semester</span></summary>
+  <div class="fold-body">
+
+    {% if dash.degree.has_data %}
+      <p style="margin:0 0 8px"><strong>CGPA {{ dash.degree.cgpa|default:"—" }}</strong>{% if dash.degree.standing %} · {{ dash.degree.standing }}{% endif %}</p>
+      {% if dash.degree.percent is not None %}
+      <div style="background:var(--border,#e5e7eb);border-radius:6px;height:12px;overflow:hidden"><div style="width:{{ dash.degree.percent }}%;height:100%;background:var(--primary,#2563eb)"></div></div>
+      <p class="muted" style="font-size:.85rem;margin:6px 0 12px">{{ dash.degree.earned_credits|floatformat:"-1" }} of {{ dash.degree.total_credits|floatformat:"-1" }} credits passed · {{ dash.degree.remaining_credits|floatformat:"-1" }} to go</p>
+      {% endif %}
+      {% if dash.degree.trend %}
+      <div class="muted" style="font-size:.8rem;margin-bottom:4px">GPA by semester (scale 0–4)</div>
+      {% for t in dash.degree.trend %}
+      <div style="display:flex;align-items:center;gap:8px;margin:3px 0;font-size:.85rem"><span style="width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ t.label }}</span>
+        <div style="flex:1;background:var(--border,#e5e7eb);border-radius:4px;height:10px"><div style="width:{{ t.width }}%;height:100%;border-radius:4px;background:var(--primary,#2563eb)"></div></div><strong>{{ t.gpa }}</strong></div>
+      {% endfor %}
+      {% endif %}
+    {% else %}<p class="muted">No published results yet - your progress appears here once results are published.</p>{% endif %}
+  </div>
+</details>
+
+<details class="fold">
+  <summary>📚 Curriculum Courses — Recommended for Your Current Semester <span class="hint">{{ recommended_courses|length }} course{{ recommended_courses|length|pluralize }}</span></summary>
+  <div class="fold-body">{% if recommended_courses %}
+
+  <p class="muted">These courses come from your active curriculum and computed academic position. Registration eligibility is checked before assignment.</p>
+  <table class="table"><thead><tr><th>Course</th><th>Type</th><th>Credits</th></tr></thead><tbody>
+  {% for item in recommended_courses %}<tr><td>{{ item.course.code }} — {{ item.course.name }}</td><td>{{ item.get_course_type_display }}</td><td>{{ item.course.credits }}</td></tr>{% endfor %}
+  </tbody></table>
+{% else %}<p class="muted">No recommended courses right now.</p>{% endif %}</div>
+</details>
+
+<details class="fold" {% if unread_notification_count %}open{% endif %}>
+  <summary>🔔 Notifications ({{ unread_notification_count|default:0 }} unread) <span class="hint">latest updates for you</span></summary>
+  <div class="fold-body">{% if recent_notifications %}
+
+  {% for n in recent_notifications %}
+  <div class="dash-list-item">
+    <a href="{{ n.url|default:'#' }}">{{ n.title }}</a>
+    <span class="meta">{{ n.created_at|timesince }} ago</span>
+  </div>
+  {% endfor %}
+{% else %}<p class="muted">No notifications.</p>{% endif %}</div>
+</details>
+
+<details class="fold">
+  <summary>📢 Notices <span class="hint">university announcements</span></summary>
+  <div class="fold-body">{% if recent_notices %}
+
+  {% for n in recent_notices %}
+  <div class="dash-list-item"><span>{{ n.title }}</span><span class="meta">{{ n.published_at|timesince }} ago</span></div>
+  {% endfor %}
+<a class="btn ghost" href="{% url 'notices-list' %}">View all notices</a>{% else %}<p class="muted">No notices.</p>{% endif %}</div>
+</details>
+
+<details class="fold">
+  <summary>📖 Library <a href="{% url 'my-loans' %}" style="margin-left:auto;font-weight:400">My books</a></summary>
+  <div class="fold-body">
+
+    {% if dash.library %}
+    <ul style="list-style:none;padding:0;margin:0">
+      {% for l in dash.library %}
+      <li style="display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid var(--border,#eee)">
+        <span>{{ l.book.title }}</span>
+        <span style="white-space:nowrap;{% if l.overdue or l.days_left <= 2 %}color:var(--warn);font-weight:600{% endif %}">{% if l.overdue %}overdue {{ l.days_left|cut:"-" }}d{% if l.fine %} · Rs {{ l.fine }}{% endif %}{% elif l.days_left == 0 %}due today{% else %}due in {{ l.days_left }}d{% endif %}</span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}<p class="muted">You have no borrowed books.</p>{% endif %}
+  </div>
+</details>
+
+<details class="fold">
+  <summary>🔢 More about me <span class="hint">GPA, standing, semester, hostel, books</span></summary>
+  <div class="fold-body"><div class="stat-grid">
+    <div class="stat-card"><span class="stat-value">{{ current_semester_gpa|default_if_none:"—" }}</span><span class="stat-label">Semester GPA</span></div>
+    <div class="stat-card"><span class="stat-value" style="font-size:1rem">{{ academic_standing|default:"—" }}</span><span class="stat-label">Academic Standing</span></div>
+    <div class="stat-card"><span class="stat-value">{% if academic_position %}{{ academic_position.semester }}/{{ academic_position.total_semesters }}{% else %}—{% endif %}</span><span class="stat-label">{% if academic_position %}Year {{ academic_position.year }} Semester{% else %}Semester of Study{% endif %}</span></div>
+    <div class="stat-card"><span class="stat-value">{{ active_loans|default:0 }}</span><span class="stat-label">Books Borrowed</span></div>
+    <div class="stat-card"><span class="stat-value">{{ hostel_status.get_status_display|default:"Not Applied" }}</span><span class="stat-label">Hostel Status</span></div>
+  </div></div>
+</details>
+
+<details class="fold">
+  <summary>🧭 All my pages <span class="hint">every other screen, in one place</span></summary>
+  <div class="fold-body">
+<h3 class="section-title">💳 Fees &amp; Payments</h3>
+<div class="grid">
+  <a class="dash-card" href="{% url 'fees-list' %}"><span class="dash-icon">💳</span>Fees &amp; Challans</a>
+  <a class="dash-card" href="{% url 'verify-challan' %}"><span class="dash-icon">🧾</span>Verify a Payment</a>
+</div>
+
+<h3 class="section-title">📝 Apply Online</h3>
+<div class="grid">
+  <a class="dash-card" href="{% url 'hostel-apply' %}"><span class="dash-icon">🏠</span>Apply for Hostel</a>
+  <a class="dash-card" href="{% url 'apply' %}"><span class="dash-icon">🏫</span>Apply for Admission</a>
+  <a class="dash-card" href="{% url 'scholarship-list' %}"><span class="dash-icon">🎓</span>Apply for Scholarship</a>
+  <a class="dash-card" href="{% url 'result-checker' %}"><span class="dash-icon">🔁</span>Apply for Retake/Improvement</a>
+  <a class="dash-card" href="{% url 'submit-complaint' %}"><span class="dash-icon">🗣️</span>Submit a Complaint</a>
+</div>
+
+<h3 class="section-title">🎓 Academics</h3>
+<div class="grid">
+  <a class="dash-card" href="{% url 'student-automation' %}"><span class="dash-icon">⚡</span>My Smart Actions</a>
+  <a class="dash-card" href="{% url 'browse-sections' %}"><span class="dash-icon">📝</span>Course Selection</a>
+  <a class="dash-card" href="{% url 'course-list' %}"><span class="dash-icon">📘</span>Course Catalog</a>
+  <a class="dash-card" href="{% url 'results' %}"><span class="dash-icon">📊</span>My Results</a>
+  {% if student %}<a class="dash-card" href="{% url 'marksheet' student.id %}"><span class="dash-icon">📄</span>My Marksheet</a>{% endif %}
+  <a class="dash-card" href="{% url 'my-exam-slip' %}"><span class="dash-icon">🎫</span>My Exam Slip</a>
+  <a class="dash-card" href="{% url 'timetable-list' %}"><span class="dash-icon">⏰</span>My Timetable</a>
+  <a class="dash-card" href="{% url 'class-list' %}"><span class="dash-icon">🎥</span>Online Classes</a>
+  <a class="dash-card" href="{% url 'assignment-list' %}"><span class="dash-icon">📝</span>Assignments</a>
+  <a class="dash-card" href="{% url 'quiz-list' %}"><span class="dash-icon">❓</span>Quizzes</a>
+  <a class="dash-card" href="{% url 'attendance-list' %}"><span class="dash-icon">✅</span>Attendance / Check-In</a>
+</div>
+
+<h3 class="section-title">📚 Campus Life</h3>
+<div class="grid">
+  <a class="dash-card" href="{% url 'book-list' %}"><span class="dash-icon">📚</span>Library Catalog</a>
+  <a class="dash-card" href="{% url 'my-loans' %}"><span class="dash-icon">📖</span>My Borrowed Books</a>
+  <a class="dash-card" href="{% url 'hostel-my-application' %}"><span class="dash-icon">🏠</span>My Hostel Status</a>
+  <a class="dash-card" href="{% url 'my-complaints' %}"><span class="dash-icon">📋</span>My Complaints</a>
+  <a class="dash-card" href="{% url 'applications-list' %}"><span class="dash-icon">🧾</span>My Admission Applications</a>
+  <a class="dash-card" href="{% url 'notices-list' %}"><span class="dash-icon">📢</span>Notices</a>
+  <a class="dash-card" href="{% url 'ai-chat' %}"><span class="dash-icon">🤖</span>Ask AI Assistant</a>
+</div>
+  </div>
+</details>
+{% endblock %}

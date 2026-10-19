@@ -1,0 +1,29 @@
+{% extends "core/base.html" %}
+{% block title %}Programs{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>🎓 Programs</h2>
+  {% if current_role == 'admin' %}<a class="btn" href="{% url 'program-add' %}">+ Add Program</a>{% endif %}
+</div>
+<div class="panel">
+<table class="table">
+  <thead><tr><th>Code</th><th>Name</th><th>Level</th><th>Department</th><th>Duration</th><th>Semester Fee</th><th>Open Merit Seats</th>{% if current_role == 'admin' %}<th></th>{% endif %}</tr></thead>
+  <tbody>
+    {% for p in programs %}
+    <tr>
+      <td>{{ p.code|default:"—" }}</td>
+      <td>{{ p.name }}</td>
+      <td>{{ p.get_level_display }}</td>
+      <td>{{ p.department }}</td>
+      <td>{{ p.duration_years }} yrs</td>
+      <td>PKR {{ p.semester_fee }}</td>
+      <td>{{ p.open_merit_seats }}</td>
+      {% if current_role == 'admin' %}<td><a class="btn ghost" href="{% url 'program-edit' p.pk %}">Edit</a></td>{% endif %}
+    </tr>
+    {% empty %}
+    <tr><td colspan="8" class="empty-row">No programs yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

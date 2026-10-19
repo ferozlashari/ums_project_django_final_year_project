@@ -1,0 +1,70 @@
+{% extends "core/base.html" %}
+{% block title %}Workflow / Approval Center{% endblock %}
+{% block content %}
+<div class="page-head"><h2>🔄 Workflow / Approval Center</h2></div>
+<p class="muted" style="margin-top:-8px">
+  Marks corrections and fee adjustments go through here rather than being edited directly -
+  approving a request applies the change and records it in the Audit Log in the same step.
+</p>
+
+<div class="panel" style="margin-bottom:20px">
+  <h3 style="margin-top:0">Pending ({{ rows|length }})</h3>
+  {% if rows %}
+  <table class="table">
+    <thead><tr><th>Type</th><th>Requested By</th><th>Subject</th><th>Change</th><th>Current stage</th><th>Reason</th><th>Decision</th></tr></thead>
+    <tbody>
+      {% for row in rows %}{% with r=row.r %}
+      <tr>
+        <td>{{ r.get_request_type_display }}</td>
+        <td>{{ r.requested_by }}</td>
+        <td>{{ r.subject }}</td>
+        <td>{{ r.old_value|default:"-" }} → {{ r.new_value|default:"-" }}</td>
+        <td>{{ row.stage }}<br><span class="muted">step {{ row.step }}</span>
+          {% for h in row.history %}<br><span class="muted">✔ {{ h.stage_label }} — {{ h.decided_by }}</span>{% endfor %}</td>
+        <td class="muted">{{ r.reason }}</td>
+        <td>
+          {% if row.can %}
+          <form method="post" action="{% url 'workflow-approve' r.pk %}" style="display:inline">
+            {% csrf_token %}
+            <input type="hidden" name="notes" value="Approved">
+            <button class="btn" type="submit" style="padding:4px 10px">✅ Approve</button>
+          </form>
+          <form method="post" action="{% url 'workflow-reject' r.pk %}" style="display:inline">
+            {% csrf_token %}
+            <input type="hidden" name="notes" value="Rejected">
+            <button class="btn ghost" type="submit" style="padding:4px 10px">❌ Reject</button>
+          </form>
+          {% else %}<span class="muted">Waiting for another office</span>{% endif %}
+        </td>
+      </tr>
+      {% endwith %}{% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">✅ Nothing pending.</p>
+  {% endif %}
+</div>
+
+<div class="panel">
+  <h3 style="margin-top:0">Recent Decisions</h3>
+  {% if decided %}
+  <table class="table">
+    <thead><tr><th>Type</th><th>Requested By</th><th>Subject</th><th>Status</th><th>Decided By</th><th>Notes</th></tr></thead>
+    <tbody>
+      {% for r in decided %}
+      <tr>
+        <td>{{ r.get_request_type_display }}</td>
+        <td>{{ r.requested_by }}</td>
+        <td>{{ r.subject }}</td>
+        <td><span class="badge badge-{{ r.status }}">{{ r.get_status_display }}</span></td>
+        <td>{{ r.decided_by|default:"-" }}</td>
+        <td class="muted">{{ r.decision_notes|default:"-" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">No decisions yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

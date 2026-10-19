@@ -1,0 +1,24 @@
+{% extends "core/base.html" %}
+{% block title %}Hostels{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>Hostel Buildings</h2>
+  <div style="display:flex;gap:8px">
+    <a class="btn ghost" href="{% url 'hostel-rooms' %}">Rooms</a>
+    <a class="btn" href="{% url 'hostel-add' %}">+ Add Hostel</a>
+  </div>
+</div>
+<div class="cards-grid">
+  {% for h in hostels %}
+  <div class="panel">
+    <h3 style="margin-top:0">{{ h.name }}</h3>
+    <p class="muted">{{ h.get_gender_display }}{% if h.address %} &middot; {{ h.address }}{% endif %}</p>
+    {% if h.warden_name %}<p class="muted" style="font-size:.85rem">Warden: {{ h.warden_name }}{% if h.warden_phone %} ({{ h.warden_phone }}){% endif %}</p>{% endif %}
+    <p style="margin-top:8px"><strong>{{ h.total_occupied }}</strong> / {{ h.total_capacity }} beds occupied</p>
+    <span class="badge {% if h.is_active %}badge-available{% else %}badge-unavailable{% endif %}">{% if h.is_active %}Active{% else %}Inactive{% endif %}</span>
+  </div>
+  {% empty %}
+  <p class="empty-row">No hostels configured yet. Add one, then add rooms under it.</p>
+  {% endfor %}
+</div>
+{% endblock %}

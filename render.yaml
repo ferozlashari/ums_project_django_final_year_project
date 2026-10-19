@@ -1,0 +1,70 @@
+# Render FULL stack: web + Celery worker (with embedded beat) + PostgreSQL + Redis.
+# NOTE: Render has no free background-worker plan - the worker below is a paid plan.
+# For the free tier use render-free.yaml instead.
+#
+# Secrets live in ONE env group (ums-shared) used by web AND worker, so
+# DJANGO_SECRET_KEY / FIELD_ENCRYPTION_KEY are generated once and are identical everywhere
+# (a different encryption key per service makes CNIC fields unreadable).
+# Email/Safepay secrets are `sync: false`: Render prompts for them per service on first
+# creation - enter the SAME values for web and worker.
+#
+# After first deploy: Shell on ums-web -> python manage.py createsuperuser, then production_check.
+databases:
+  - name: ums-postgres
+    plan: free          # free Postgres expires after ~30 days; use a paid plan for real data
+    databaseName: ums
+    user: umsuser
+envVarGroups:
+  - name: ums-shared
+    envVars:
+      - {key: DEBUG, value: "0"}
+      - {key: DJANGO_SECRET_KEY, generateValue: true}
+      - {key: FIELD_ENCRYPTION_KEY, generateValue: true}
+      - {key: SCHEDULER_MODE, value: celery}
+      - {key: SECURE_SSL_REDIRECT, value: "1"}
+      - {key: SECURE_PROXY_SSL_HEADER, value: "1"}
+      - {key: SECURE_COOKIES, value: "1"}
+      - {key: SMTP_PORT, value: "587"}
+      - {key: SMTP_USE_TLS, value: "1"}
+services:
+  - type: keyvalue
+    name: ums-redis
+    plan: free
+    ipAllowList: []
+    maxmemoryPolicy: noeviction   # a task broker must never evict queued jobs
+  - type: web
+    name: ums-web
+    runtime: python
+    plan: starter
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "RUN_MIGRATIONS=1 bash deployment/start-single.sh"
+    healthCheckPath: /health/
+    envVars:
+      - fromGroup: ums-shared
+      - {key: DATABASE_URL, fromDatabase: {name: ums-postgres, property: connectionString}}
+      - {key: CELERY_BROKER_URL, fromService: {type: keyvalue, name: ums-redis, property: connectionString}}
+      - {key: CELERY_RESULT_BACKEND, fromService: {type: keyvalue, name: ums-redis, property: connectionString}}
+      - {key: SMTP_HOST, sync: false}
+      - {key: SMTP_USER, sync: false}
+      - {key: SMTP_PASSWORD, sync: false}
+      - {key: DEFAULT_FROM_EMAIL, sync: false}
+      - {key: PUBLIC_BASE_URL, sync: false}
+      - {key: SAFEPAY_API_KEY, sync: false}
+      - {key: SAFEPAY_SECRET_KEY, sync: false}
+      - {key: SAFEPAY_WEBHOOK_SECRET, sync: false}
+  - type: worker
+    name: ums-worker
+    runtime: python
+    plan: starter
+    buildCommand: "pip install -r requirements.txt"
+    # --beat embeds the scheduler in the single worker (one paid service instead of two).
+    startCommand: "celery -A ums_project worker --beat --loglevel=info --concurrency=2"
+    envVars:
+      - fromGroup: ums-shared
+      - {key: DATABASE_URL, fromDatabase: {name: ums-postgres, property: connectionString}}
+      - {key: CELERY_BROKER_URL, fromService: {type: keyvalue, name: ums-redis, property: connectionString}}
+      - {key: CELERY_RESULT_BACKEND, fromService: {type: keyvalue, name: ums-redis, property: connectionString}}
+      - {key: SMTP_HOST, sync: false}
+      - {key: SMTP_USER, sync: false}
+      - {key: SMTP_PASSWORD, sync: false}
+      - {key: DEFAULT_FROM_EMAIL, sync: false}

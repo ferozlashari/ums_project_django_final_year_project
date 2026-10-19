@@ -1,0 +1,19 @@
+{% extends "core/base.html" %}
+{% block title %}Register{% endblock %}
+{% block content %}
+<div class="auth-card">
+  <h2>Create Account</h2>
+  <p class="muted" style="margin-top:-8px">Username: letters only, no numbers or symbols. CNIC is required for identity verification — students can also log in later using just their CNIC. We'll email you a verification link before you can sign in.</p>
+  <form method="post">{% csrf_token %}
+    {{ form.as_p }}
+    <p>
+      <label style="display:block;margin-bottom:6px;font-weight:600">I am registering as a...</label>
+      <label><input type="radio" name="account_role" value="student" checked> Student</label><br>
+      <label><input type="radio" name="account_role" value="faculty"> Faculty</label><br>
+      <label><input type="radio" name="account_role" value="staff"> Staff (non-teaching)</label>
+      {% if enable_guardian_portal %}<br><label><input type="radio" name="account_role" value="guardian"> Parent / Guardian</label>{% endif %}
+    </p>
+    <button class="btn" type="submit">Register</button>
+  </form>
+</div>
+{% endblock %}

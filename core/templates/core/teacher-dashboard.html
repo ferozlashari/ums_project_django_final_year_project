@@ -1,0 +1,64 @@
+{% extends "core/base.html" %}
+{% block title %}Teacher Dashboard{% endblock %}
+{% block content %}
+<h2>Welcome, {{ user.get_full_name|default:user.username }} 👋</h2>
+<p class="muted">Your teaching tools and course sections.</p>
+
+<div class="stat-grid">
+  <div class="stat-card"><span class="stat-value">{{ my_sections|length }}</span><span class="stat-label">Sections</span></div>
+  <div class="stat-card"><span class="stat-value">{{ student_count }}</span><span class="stat-label">Students</span></div>
+  <div class="stat-card {% if action_items %}stat-card-warn{% endif %}"><span class="stat-value">{{ action_items|length }}</span><span class="stat-label">Action Needed</span></div>
+</div>
+
+{% if action_items %}
+<div class="dash-card-block" style="margin-top:16px;border-left:4px solid #d97706">
+  <h3>⚡ Action Needed</h3>
+  {% for item in action_items %}
+  <div class="dash-list-item">
+    <span>{{ item.label }}</span>
+    <a class="btn ghost" href="{% url item.url %}">Go</a>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if my_sections %}
+<h3 class="section-title">My Course Sections</h3>
+<div class="panel" style="margin-bottom:20px">
+  <table class="table">
+    <thead><tr><th>Course</th><th>Section</th></tr></thead>
+    <tbody>
+      {% for s in my_sections %}
+      <tr><td>{{ s.course.code }} — {{ s.course.name }}</td><td>Section {{ s.code|default:"—" }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+<h3 class="section-title">Teaching</h3>
+<ul class="quick-list">
+  <li><a href="{% url 'teacher-automation' %}"><strong>⚙️ Teacher Automation</strong> — attendance for all classes, marks &amp; updates</a></li>
+  <li><a href="{% url 'attendance-add' %}">🗓️ Take Attendance</a></li>
+  <li><a href="{% url 'class-schedule' %}">🎥 Schedule Online Class</a></li>
+  <li><a href="{% url 'class-list' %}">📺 My Online Classes</a></li>
+  <li><a href="{% url 'exams' %}">📝 Manage Exams</a></li>
+  <li><a href="{% url 'grade-add' %}">✏️ Enter Grades</a></li>
+  <li><a href="{% url 'assignment-list' %}">📄 Assignments</a></li>
+  <li><a href="{% url 'quiz-list' %}">🧩 Quizzes</a></li>
+  <li><a href="{% url 'course-list' %}">📚 Courses</a></li>
+  <li><a href="{% url 'timetable-list' %}">⏰ Timetable</a></li>
+  <li><a href="{% url 'retention-dashboard' %}">📊 Student Risk / Performance Analytics</a></li>
+</ul>
+
+<h3 class="section-title">Student &amp; Campus Management</h3>
+<ul class="quick-list">
+  <li><a href="{% url 'student-list' %}">🎓 My Students</a></li>
+  <li><a href="{% url 'book-add' %}">📚 Add Library Book</a></li>
+  <li><a href="{% url 'all-loans' %}">📖 Library Loans</a></li>
+  <li><a href="{% url 'manage-complaints' %}">🗣️ Resolve Complaints</a></li>
+  <li><a href="{% url 'manage-scholarships' %}">🎓 Scholarships</a></li>
+  <li><a href="{% url 'notices-list' %}">📢 Notices</a></li>
+  <li><a href="{% url 'ai-chat' %}">🤖 Ask AI Assistant</a></li>
+</ul>
+{% endblock %}

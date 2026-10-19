@@ -1,0 +1,15 @@
+{% extends "core/base.html" %}
+{% block title %}{% if role %}Edit{% else %}New{% endif %} role{% endblock %}
+{% block content %}
+<div class="page-head"><h2>{% if role %}Edit role: {{ role.name }}{% else %}New role{% endif %}</h2></div>
+<form method="post">{% csrf_token %}
+<div class="panel">{{ form.as_p }}</div>
+<div class="panel" style="overflow-x:auto"><h3>Permission matrix</h3>
+<p class="muted">Tick exactly what this role may do. Nothing is granted by default; permissions are additive and explicit.</p>
+<table class="table"><thead><tr><th>Module</th>{% for a, label in actions %}<th style="font-size:11px">{{ label }}</th>{% endfor %}</tr></thead><tbody>
+{% for row in matrix %}<tr><td>{{ row.label }}</td>
+{% for c in row.cells %}<td style="text-align:center"><input type="checkbox" name="perm_{{ row.module }}__{{ c.action }}" {% if c.checked %}checked{% endif %}></td>{% endfor %}</tr>{% endfor %}
+</tbody></table></div>
+<button class="btn" type="submit">Save role</button> <a class="btn ghost" href="{% url 'role-list' %}">Cancel</a>
+</form>
+{% endblock %}

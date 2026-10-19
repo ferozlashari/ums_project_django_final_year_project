@@ -1,0 +1,33 @@
+{% extends "core/base.html" %}
+{% block title %}Manage Retake / Improvement Applications{% endblock %}
+{% block content %}
+<div class="page-head"><h2>Manage Retake / Improvement Applications</h2></div>
+<div class="panel">
+<table class="table">
+  <thead><tr><th>Student</th><th>Course</th><th>Type</th><th>Status</th><th>Applied</th><th></th></tr></thead>
+  <tbody>
+    {% for a in applications %}
+    <tr>
+      <td>{{ a.student }}</td>
+      <td>{{ a.grade_entry.exam.course.code }}</td>
+      <td>{{ a.get_application_type_display }}</td>
+      <td><span class="badge badge-{{ a.status }}">{{ a.get_status_display }}</span></td>
+      <td>{{ a.applied_at|date:"M d, Y" }}</td>
+      <td style="display:flex;gap:6px">
+        {% if a.status == 'pending' %}
+        <form method="post" action="{% url 'review-retake-application' a.pk %}">{% csrf_token %}
+          <input type="hidden" name="status" value="approved"><button class="btn ghost" type="submit">Approve</button>
+        </form>
+        <form method="post" action="{% url 'review-retake-application' a.pk %}">{% csrf_token %}
+          <input type="hidden" name="status" value="rejected"><button class="btn ghost" type="submit">Reject</button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="6" class="empty-row">No applications yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

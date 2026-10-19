@@ -1,0 +1,26 @@
+{% extends "core/base.html" %}
+{% block title %}Hostel{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>🏠 Hostel Accommodation</h2>
+  {% if not applications %}<a class="btn" href="{% url 'hostel-apply' %}">Apply for Hostel</a>{% endif %}
+</div>
+<div class="panel">
+<table class="table">
+  <thead><tr><th>Applied</th><th>Preference</th><th>Assigned Room</th><th>Status</th><th>Remarks</th></tr></thead>
+  <tbody>
+    {% for a in applications %}
+    <tr>
+      <td>{{ a.applied_at|date:"M d, Y" }}</td>
+      <td>{{ a.get_room_type_preference_display }}</td>
+      <td>{{ a.assigned_room|default:"Not yet assigned" }}</td>
+      <td><span class="badge badge-{{ a.status }}">{{ a.get_status_display }}</span></td>
+      <td>{{ a.remarks|default:"—" }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="5" class="empty-row">No hostel application yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

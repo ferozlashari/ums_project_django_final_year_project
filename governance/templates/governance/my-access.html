@@ -1,0 +1,23 @@
+{% extends "core/base.html" %}
+{% block title %}My Access{% endblock %}
+{% block content %}
+<div class="page-head"><h2>🔑 What my account can do</h2></div>
+<div class="panel">
+  <p><strong>Account type:</strong> {{ role|title }}{% if is_super %} — <em>Super / System Administrator</em>{% endif %}</p>
+  {% if is_super %}
+  <p class="muted">The system administrator manages the software, security and settings. University decisions (admissions, results, refunds) belong to the office holders; the system administrator can only act as a logged <em>break-glass</em> fallback when nobody holds that authority.</p>
+  {% elif role == 'student' %}<p class="muted">Students see and change only their own records.</p>
+  {% elif role == 'faculty' %}<p class="muted">Teachers work only with the sections assigned to them: attendance, assessments and marks for those sections. Changing a published mark needs an approval request.</p>
+  {% elif role == 'guardian' %}<p class="muted">Guardian access is read-only and limited to the linked student.</p>{% endif %}
+</div>
+{% for r in rows %}
+<div class="panel">
+  <h3 style="margin-top:0">{{ r.assignment.role.name }} <span class="muted">— {{ r.assignment.get_scope_type_display }}{% if r.assignment.scope_id %} #{{ r.assignment.scope_id }}{% endif %}{% if r.assignment.end_date %}, until {{ r.assignment.end_date }}{% endif %}</span></h3>
+  <table class="table"><thead><tr><th>Area</th><th>Allowed actions</th></tr></thead><tbody>
+  {% for module, actions in r.grouped %}<tr><td>{{ module }}</td><td>{{ actions|join:", " }}</td></tr>{% endfor %}
+  </tbody></table>
+</div>
+{% empty %}
+{% if not is_super %}<div class="panel"><p class="muted">You hold no administrative office role. Your access is the normal {{ role }} access.</p></div>{% endif %}
+{% endfor %}
+{% endblock %}

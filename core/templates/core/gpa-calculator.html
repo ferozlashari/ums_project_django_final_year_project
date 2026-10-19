@@ -1,0 +1,41 @@
+{% extends "core/base.html" %}
+{% block title %}GPA / CGPA Calculator{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>🎓 GPA / CGPA — {{ student.full_name }}</h2>
+</div>
+
+<div class="cards-grid" style="margin-bottom:20px">
+  <div class="panel" style="text-align:center">
+    <p class="muted" style="margin:0">Cumulative GPA</p>
+    <p style="font-size:2.2rem;font-weight:800;margin:6px 0">{{ cgpa|default_if_none:"—" }}</p>
+    <p class="muted" style="margin:0">out of 4.00 · {{ total_credits }} credit hours</p>
+  </div>
+</div>
+
+{% for row in semester_rows %}
+<div class="panel" style="margin-bottom:16px">
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <h3 style="margin:0">{{ row.label }}</h3>
+    <span class="badge badge-yes">GPA: {{ row.gpa|default_if_none:"—" }}</span>
+  </div>
+  <table class="table" style="margin-top:10px">
+    <thead><tr><th>Course</th><th>Marks</th><th>%</th><th>Grade</th><th>Points</th><th>Credits</th></tr></thead>
+    <tbody>
+      {% for g in row.grades %}
+      <tr>
+        <td>{{ g.exam.course.code }} - {{ g.exam.course.name }}</td>
+        <td>{{ g.marks }}</td>
+        <td>{{ g.percentage }}%</td>
+        <td>{{ g.letter_grade }}</td>
+        <td>{{ g.grade_point }}</td>
+        <td>{{ g.exam.course.credits }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% empty %}
+<p class="empty-row">No grades recorded yet — GPA will appear here once results are posted.</p>
+{% endfor %}
+{% endblock %}

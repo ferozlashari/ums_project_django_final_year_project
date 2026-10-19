@@ -1,0 +1,35 @@
+{% extends "core/base.html" %}
+{% block title %}Assignments{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>📝 Assignments</h2>
+  {% if role == 'admin' or role == 'faculty' or role == 'staff' %}
+  <a class="btn" href="{% url 'assignment-add' %}">+ New Assignment</a>
+  {% endif %}
+</div>
+<div class="cards-grid">
+  {% for row in rows %}
+  {% with a=row.assignment submission=row.submission %}
+  <div class="panel">
+    <h3 style="margin-top:0">{{ a.title }}</h3>
+    <p class="muted">{{ a.section.course.code }} - {{ a.section.course.name }} ({{ a.section }})</p>
+    {% if a.description %}<p>{{ a.description|truncatewords:25 }}</p>{% endif %}
+    <p class="muted" style="font-size:.85rem">Due {{ a.due_date|date:"M d, Y H:i" }}{% if a.is_overdue %} <span class="badge badge-unavailable">Overdue</span>{% endif %} &middot; {{ a.max_marks }} marks</p>
+
+    {% if role == 'student' %}
+      {% if submission %}
+        <span class="badge badge-yes">Submitted{% if submission.was_late %} (late){% endif %}</span>
+        {% if submission.marks_obtained != None %}<p class="muted">Score: {{ submission.marks_obtained }} / {{ a.max_marks }}</p>{% endif %}
+      {% else %}
+        <a class="btn" href="{% url 'assignment-submit' a.pk %}">Submit</a>
+      {% endif %}
+    {% elif role == 'admin' or role == 'faculty' or role == 'staff' %}
+      <a class="btn ghost" href="{% url 'assignment-submissions' a.pk %}">Submissions ({{ a.submissions.count }})</a>
+    {% endif %}
+  </div>
+  {% endwith %}
+  {% empty %}
+  <p class="empty-row">No assignments yet.</p>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "core/base.html" %}
+{% block title %}Fees Summary{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>Fees Summary</h2>
+  <a class="btn ghost" href="{% url 'reports' %}">&larr; Back to Reports</a>
+</div>
+
+<div class="stat-grid">
+  <div class="stat-card"><span class="stat-value">{{ total_count }}</span><span class="stat-label">Invoices</span></div>
+  <div class="stat-card"><span class="stat-value">{{ total_invoiced }}</span><span class="stat-label">Total Invoiced</span></div>
+  <div class="stat-card"><span class="stat-value">{{ paid_total }}</span><span class="stat-label">Total Paid</span></div>
+  <div class="stat-card stat-card-warn"><span class="stat-value">{{ outstanding }}</span><span class="stat-label">Outstanding</span></div>
+</div>
+{% endblock %}

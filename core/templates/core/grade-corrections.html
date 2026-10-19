@@ -1,0 +1,16 @@
+{% extends "core/base.html" %}
+{% block title %}Grade corrections{% endblock %}
+{% block content %}
+<div class="page-head"><h2>Grade correction requests</h2></div>
+<div class="panel"><table class="table"><thead><tr><th>Student / exam</th><th>Requested by</th><th>Reason</th><th>Old</th><th>Status</th>{% if can_review %}<th></th>{% endif %}</tr></thead><tbody>
+{% for r in requests %}<tr>
+<td>{{ r.grade_entry.student }}<br><span class="muted">{{ r.grade_entry.exam }}</span></td>
+<td>{{ r.requested_by.username|default:"-" }}<br><span class="muted">{{ r.created_at|date:"Y-m-d H:i" }}</span></td>
+<td>{{ r.reason }}</td><td>{{ r.old_marks }} ({{ r.old_grade }})</td>
+<td>{{ r.get_status_display }}{% if r.review_note %}<br><span class="muted">{{ r.review_note }}</span>{% endif %}</td>
+{% if can_review %}<td>{% if r.status == 'pending' %}
+<form method="post" action="{% url 'grade-correction-decide' r.pk 'approve' %}" style="display:inline">{% csrf_token %}<button class="btn">Approve</button></form>
+<form method="post" action="{% url 'grade-correction-decide' r.pk 'reject' %}" style="display:inline">{% csrf_token %}<input name="note" placeholder="note" size="12"><button class="btn ghost">Reject</button></form>{% endif %}</td>{% endif %}
+</tr>{% empty %}<tr><td colspan="6" class="muted">No correction requests.</td></tr>{% endfor %}
+</tbody></table></div>
+{% endblock %}

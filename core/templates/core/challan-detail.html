@@ -1,0 +1,68 @@
+{% extends "core/base.html" %}
+{% block title %}Challan {{ invoice.challan_no }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>Fee Challan</h2>
+  <div style="display:flex;gap:8px">
+    <a href="javascript:history.back()" class="btn ghost">← Back</a>
+    <button class="btn ghost" onclick="window.print()">🖨️ Print</button>
+    {% if not invoice.paid %}<a class="btn" href="{% url 'pay-now' invoice.pk %}">💳 Pay Now</a>{% endif %}
+  </div>
+</div>
+
+<div class="panel challan-sheet">
+  <div class="challan-head">
+    <div><span class="brand-mark">U</span> <strong>{{ site_name }}</strong></div>
+    <span class="badge {% if invoice.paid %}badge-paid{% elif invoice.is_overdue %}badge-overdue{% else %}badge-pending{% endif %}">
+      {% if invoice.paid %}PAID{% elif invoice.is_overdue %}OVERDUE{% else %}UNPAID{% endif %}
+    </span>
+  </div>
+  <h3 style="margin-top:4px">Challan No: {{ invoice.challan_no }}</h3>
+  <table class="table">
+    <tr><th style="width:220px">Student</th><td>{{ invoice.student.full_name }} ({{ invoice.student.admission_no }})</td></tr>
+    <tr><th>Fee Category</th><td>{{ invoice.get_category_display }}</td></tr>
+    <tr><th>Amount</th><td><strong>Rs. {{ invoice.amount }}</strong></td></tr>
+    <tr><th>Due Date</th><td>{{ invoice.due_date|default:"—" }}</td></tr>
+    <tr><th>Issued</th><td>{{ invoice.created_at|date:"M d, Y" }}</td></tr>
+    {% if invoice.reference %}<tr><th>Reference</th><td>{{ invoice.reference }}</td></tr>{% endif %}
+    {% if invoice.notes %}<tr><th>Notes</th><td>{{ invoice.notes }}</td></tr>{% endif %}
+  </table>
+
+  {% if not invoice.paid %}
+  <div class="panel" style="background:var(--bg);margin-top:16px">
+    <h4 style="margin-top:0">Bank Deposit Details (alternative to online payment)</h4>
+    <p>Bank: {{ bank.bank_name }} — Account Title: {{ bank.account_title }}</p>
+    <p>Account No: {{ bank.account_no }} — IBAN: {{ bank.iban }}</p>
+    <p>JazzCash: {{ bank.jazzcash_number }} — EasyPaisa: {{ bank.easypaisa_number }}</p>
+    <p class="muted">Deposit slip/TID number, then submit it via "Pay Now" so the accounts office can confirm your payment.</p>
+  </div>
+  {% endif %}
+
+  {% if invoice.is_overdue and not invoice.paid and role == 'admin' %}
+    <form method="post" action="{% url 'apply-late-fee' invoice.pk %}" style="margin-top:12px">
+      {% csrf_token %}
+      <button class="btn" type="submit">Apply 5% Late Penalty Challan</button>
+    </form>
+  {% endif %}
+
+  {% if invoice.payments.all %}
+  <h4>Payment Submissions</h4>
+  <table class="table">
+    <thead><tr><th>Method</th><th>Reference</th><th>Status</th><th>Submitted</th>{% if role == 'admin' %}<th></th>{% endif %}</tr></thead>
+    <tbody>
+      {% for p in invoice.payments.all %}
+      <tr>
+        <td>{{ p.get_method_display }}</td>
+        <td>{{ p.transaction_id|default:"—" }}</td>
+        <td><span class="badge {% if p.status == 'confirmed' %}badge-confirmed{% else %}badge-pending{% endif %}">{{ p.get_status_display }}</span></td>
+        <td>{{ p.paid_at|date:"M d, Y H:i" }}</td>
+        {% if role == 'admin' %}
+        <td>{% if p.status == 'pending' %}<form method="post" action="{% url 'confirm-payment' p.pk %}" style="display:inline">{% csrf_token %}<button class="btn ghost" type="submit">Confirm</button></form>{% endif %}</td>
+        {% endif %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</div>
+{% endblock %}

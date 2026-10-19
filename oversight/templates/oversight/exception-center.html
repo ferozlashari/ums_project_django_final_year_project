@@ -1,0 +1,42 @@
+{% extends "core/base.html" %}
+{% block title %}Exception Center{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>🚨 Exception Center</h2>
+</div>
+<p class="muted" style="margin-top:-8px">
+  Automatically detected from live data - registration/prerequisite problems, capacity and
+  teacher-assignment gaps, timetable conflicts, missing marks, low attendance and finance
+  exceptions. Nothing here is stored separately; every finding is recomputed from the current
+  database each time you open this page. Click through to fix the underlying record - the fix
+  itself still goes through the normal audited workflow.
+</p>
+
+<div class="panel" style="margin-bottom:20px">
+  <strong>{{ total }}</strong> open exception{{ total|pluralize }} across {{ categories|length }} categories.
+  Related: <a href="{% url 'data-quality-center' %}">Data Quality Center</a>
+</div>
+
+{% for cat in categories %}
+<div class="panel" style="margin-bottom:16px">
+  <h3 style="margin-top:0">{{ cat.icon }} {{ cat.label }} <span class="muted">({{ cat.count }})</span></h3>
+  {% if cat.findings %}
+  <table class="table">
+    <thead><tr><th>Issue</th><th>Detail</th><th>Severity</th><th></th></tr></thead>
+    <tbody>
+      {% for f in cat.findings %}
+      <tr>
+        <td>{{ f.title }}</td>
+        <td class="muted">{{ f.detail }}</td>
+        <td><span class="badge badge-{{ f.severity }}">{{ f.severity|upper }}</span></td>
+        <td>{% if f.link %}<a href="{{ f.link }}">{{ f.link_label }}</a>{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">✅ Nothing to review here.</p>
+  {% endif %}
+</div>
+{% endfor %}
+{% endblock %}

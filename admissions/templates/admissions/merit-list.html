@@ -1,0 +1,61 @@
+{% extends "core/base.html" %}
+{% block title %}Merit List{% endblock %}
+{% block content %}
+<div class="panel" style="margin-bottom:18px">
+  <h3 style="margin-top:0">Ranked-preference allocation (up to 5 choices)</h3>
+  <p class="muted">For applicants who ranked several programs: seats are filled in merit order across <em>all</em> programs at once, so a higher-merit applicant is never blocked by a lower-merit one. Run each seat pool separately.</p>
+  <form method="post" action="{% url 'run-preference-allocation' %}" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+    {% csrf_token %}
+    <select name="admission_type"><option value="open_merit">Open merit seats</option><option value="district_quota">District quota seats</option></select>
+    <button class="btn" type="submit">Run allocation</button>
+    <button class="btn ghost" type="submit" name="dry_run" value="1">Preview only</button>
+  </form>
+</div>
+
+<div class="page-head">
+  <h2>🏆 Merit List</h2>
+  <a class="btn ghost" href="{% url 'applications-list' %}">← Applications</a>
+</div>
+<p class="muted">Ranked by entry test score, highest first, per program. Passing the entry test (above 49/100) only makes someone eligible. "Run merit selection" fills each seat pool from the top of the ranking, waitlists the rest, and enrolls the selected applicants.</p>
+
+<form method="get" class="panel" style="display:flex;gap:10px;align-items:end;margin-bottom:16px">
+  <div>
+    <label>Program</label><br>
+    <select name="program">
+      <option value="">All programs</option>
+      {% for p in programs %}
+      <option value="{{ p.id }}" {% if selected_program == p.id|stringformat:"s" %}selected{% endif %}>{{ p.name }} ({{ p.get_level_display }})</option>
+      {% endfor %}
+    </select>
+  </div>
+  <button class="btn ghost" type="submit">Filter</button>
+</form>
+
+{% for group in grouped %}
+<div class="panel" style="margin-bottom:16px">
+  <h3 style="margin-top:0">{{ group.program.name }} <span class="muted" style="font-weight:400">({{ group.program.get_level_display }})</span></h3>
+  <form method="post" action="{% url 'run-selection' %}" style="display:flex;gap:8px;margin-bottom:10px">
+    {% csrf_token %}<input type="hidden" name="program" value="{{ group.program.id }}">
+    <button class="btn" type="submit">Run merit selection</button>
+    <button class="btn ghost" type="submit" name="dry_run" value="1">Preview only</button>
+    <span class="muted">Seats: open merit {{ group.program.open_merit_seats }}, district quota {{ group.program.district_quota_seats }}</span>
+  </form>
+  <table class="table">
+    <thead><tr><th>Rank</th><th>Candidate</th><th>Roll No.</th><th>Score</th><th>Application Status</th></tr></thead>
+    <tbody>
+      {% for row in group.rows %}
+      <tr>
+        <td><strong>{{ row.rank }}</strong></td>
+        <td>{{ row.entry.application.display_name }}</td>
+        <td>{{ row.entry.roll_number }}</td>
+        <td>{{ row.entry.marks_obtained }}/100</td>
+        <td><span class="badge badge-{{ row.entry.application.status }}">{{ row.entry.application.get_status_display }}</span></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% empty %}
+<p class="empty-row">No evaluated entry tests yet.</p>
+{% endfor %}
+{% endblock %}

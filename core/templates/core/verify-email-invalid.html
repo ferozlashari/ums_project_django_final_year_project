@@ -1,0 +1,10 @@
+{% extends "core/base.html" %}
+{% block title %}Verification Link Invalid{% endblock %}
+{% block content %}
+<div class="auth-card" style="text-align:center">
+  <div style="font-size:2.5rem">⚠️</div>
+  <h2>Link expired or invalid</h2>
+  <p>This verification link is no longer valid. Please try registering again, or contact support.</p>
+  <a class="btn" href="{% url 'register' %}">Register Again</a>
+</div>
+{% endblock %}

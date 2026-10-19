@@ -1,0 +1,47 @@
+{% extends "core/base.html" %}
+{% block title %}Attendance — {{ day|date:"d M Y" }}{% endblock %}
+{% block content %}
+<div class="page-head"><h2>🗓️ Attendance — {{ day|date:"l, d M Y" }}</h2></div>
+<p class="muted" style="margin-top:-8px">{{ semester.display_name }}. Everyone defaults to present; untick the absentees. One Save records every class below.</p>
+<form method="get" style="margin-bottom:12px;display:flex;gap:8px;align-items:center">
+  <input type="date" name="date" value="{{ day|date:'Y-m-d' }}" max="{{ max_date }}">
+  <select name="course" onchange="this.form.submit()"><option value="">All subjects</option>{% for c in subjects %}<option value="{{ c.pk }}" {% if course_id == c.pk %}selected{% endif %}>{{ c.code }} — {{ c.name }}</option>{% endfor %}</select>
+  <label><input type="checkbox" name="all" value="1" {% if show_all %}checked{% endif %}> all my sections</label>
+  <button class="btn ghost" type="submit">Go</button>
+</form>
+{% if problem %}<div class="panel" style="border-left:4px solid #d97706">{{ problem }}</div>{% endif %}
+<p class="muted">{{ sheets|length }} class{{ sheets|length|pluralize:"es" }} · {{ total_students }} students on this page. <a href="{% url 'teacher-attendance-summary' %}">See attendance totals for all classes →</a></p>
+
+{% if sheets %}
+<form method="post">{% csrf_token %}
+  <input type="hidden" name="date" value="{{ day|date:'Y-m-d' }}">{% if course_id %}<input type="hidden" name="course" value="{{ course_id }}">{% endif %}{% if show_all %}<input type="hidden" name="all" value="1">{% endif %}
+  {% for sh in sheets %}
+  <div class="panel" style="margin-bottom:16px">
+    <h3 style="margin-top:0">{{ sh.section.course.code }} — {{ sh.section.course.name }} <span class="muted">(Sec {{ sh.section.code|default:"—" }})</span>
+      {% if sh.locked %}<span class="badge">🔒 finalised</span>{% elif sh.already_marked %}<span class="badge">saved</span>{% endif %}</h3>
+    {% if sh.locked and sh.session %}
+      <div class="muted" style="margin:6px 0">This sheet is finalised. {% if sh.pending_request %}A correction request is pending.{% else %}To change it, ask an authorised officer to reopen it:{% endif %}</div>
+      {% if not sh.pending_request %}
+      <button type="submit" class="btn ghost" formaction="{% url 'attendance-correction-request' sh.session.pk %}" formnovalidate onclick="var r=prompt('Reason for correction (required):'); if(!r){return false;} this.form.insertAdjacentHTML('beforeend','<input type=hidden name=reason value=\''+r.replace(/'/g,'&#39;')+'\'>'); return true;">Request correction</button>
+      {% endif %}
+    {% endif %}
+    {% if sh.rows %}
+    <label><input type="checkbox" name="include_{{ sh.section.pk }}" checked {% if sh.locked %}disabled{% endif %}> Include this class when saving</label>
+    <button type="button" class="btn ghost" onclick="document.querySelectorAll('.s{{ sh.section.pk }}').forEach(c=>c.checked=true)">All present</button>
+    <button type="button" class="btn ghost" onclick="document.querySelectorAll('.s{{ sh.section.pk }}').forEach(c=>c.checked=false)">All absent</button>
+    <table class="table"><thead><tr><th>Student</th><th>Admission no.</th><th>Present</th></tr></thead><tbody>
+      {% for r in sh.rows %}
+      <tr><td>{{ r.student.full_name }}</td><td>{{ r.student.admission_no }}</td>
+        <td><input class="s{{ sh.section.pk }}" type="checkbox" name="present_{{ sh.section.pk }}_{{ r.student.pk }}" {% if r.present %}checked{% endif %} {% if sh.locked %}disabled{% endif %}></td></tr>
+      {% endfor %}
+    </tbody></table>
+    {% else %}<p class="muted">No registered students in this section this semester.</p>{% endif %}
+  </div>
+  {% endfor %}
+  <label style="display:flex;gap:8px;align-items:center;margin-bottom:12px"><input type="checkbox" name="finalise"> Finalise (lock) these sheets after saving — only an administrator can reopen them</label>
+  <button class="btn" type="submit" {% if problem %}disabled{% endif %}>💾 Save all classes</button>
+</form>
+{% else %}
+<div class="panel muted">No classes are timetabled for this day. Tick “all my sections” to take attendance for a class that isn't on the timetable.</div>
+{% endif %}
+{% endblock %}

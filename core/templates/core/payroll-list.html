@@ -1,0 +1,32 @@
+{% extends "core/base.html" %}
+{% block title %}Payroll{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>💰 Payroll — Staff &amp; Faculty Salaries</h2>
+  <div style="display:flex;gap:8px">
+    <form method="post" action="{% url 'payroll-generate-month' %}">{% csrf_token %}<button class="btn ghost" type="submit">Generate This Month for Everyone</button></form>
+    <a class="btn" href="{% url 'payroll-add' %}">+ New Payslip</a>
+  </div>
+</div>
+<p class="muted">Salaries only - separate from student fee challans. Set a monthly salary on each staff member's profile, then use "Generate This Month" to create payslips in one click.</p>
+<div class="panel">
+<table class="table">
+  <thead><tr><th>Staff</th><th>Role</th><th>Month</th><th>Amount</th><th>Status</th><th>Reference</th><th></th></tr></thead>
+  <tbody>
+    {% for p in payslips %}
+    <tr>
+      <td>{{ p.staff.full_name }}</td>
+      <td>{{ p.staff.get_role_display|default:"—" }}</td>
+      <td>{{ p.month|date:"F Y" }}</td>
+      <td>{{ currency_symbol }} {{ p.amount }}</td>
+      <td><span class="badge {% if p.status == 'paid' %}badge-yes{% else %}badge-pending{% endif %}">{{ p.get_status_display }}</span></td>
+      <td>{{ p.reference|default:"—" }}</td>
+      <td>{% if p.status == 'pending' %}<form method="post" action="{% url 'payroll-pay' p.pk %}" style="display:inline">{% csrf_token %}<button class="btn ghost" type="submit">Mark Paid</button></form>{% endif %}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="7" class="empty-row">No payslips yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

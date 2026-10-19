@@ -1,0 +1,25 @@
+{% extends "core/base.html" %}
+{% block title %}ID Verification{% endblock %}
+{% block content %}
+<div class="page-head"><h2>🔎 Student ID Verification</h2></div>
+
+<div class="panel" style="max-width:420px;margin:0 auto;text-align:center">
+  {% if valid %}
+    <div style="font-size:2.5rem">✅</div>
+    <h3 style="margin:8px 0 4px">ID Verified</h3>
+    <table style="text-align:left;margin:16px auto;font-size:.9rem">
+      <tr><td class="muted">Name</td><td><strong>{{ student.full_name }}</strong></td></tr>
+      <tr><td class="muted">Student ID</td><td>{{ student.admission_no }}</td></tr>
+      <tr><td class="muted">Program</td><td>{{ student.program|default:"-" }}</td></tr>
+      <tr><td class="muted">Status</td><td><span class="badge badge-{{ student.status }}">{{ student.get_status_display }}</span></td></tr>
+    </table>
+    {% if student.status != 'active' %}
+      <p class="notice notice-warning">This student's account is not currently active - do not treat this as a valid active-student ID.</p>
+    {% endif %}
+  {% else %}
+    <div style="font-size:2.5rem">❌</div>
+    <h3 style="margin:8px 0 4px">Not Verified</h3>
+    <p class="muted">This code is invalid, tampered with, or does not match any student record.</p>
+  {% endif %}
+</div>
+{% endblock %}
